@@ -1103,6 +1103,9 @@ footer {
 
 /* Phones: one tight rhythm between sections. */
 @media (max-width: 960px) {
+  :root { --gutter: 20px; }
+  .feature .device, .feature-device { width: 100%; min-width: 0; }
+  .feature-device .device { width: 100%; }
   .featured .project-grid { display: flex; gap: 8px; margin-right: calc(var(--gutter) * -1); padding-right: var(--gutter); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
   .featured .project-grid::-webkit-scrollbar { display: none; }
   .featured .project-card { flex: 0 0 82%; scroll-snap-align: start; }
