@@ -10,6 +10,10 @@ const TYPES = {
   '.js': 'text/javascript; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
   '.png': 'image/png',
+  '.json': 'application/json; charset=utf-8',
+  '.webp': 'image/webp',
+  '.jpg': 'image/jpeg',
+  '.svg': 'image/svg+xml',
 };
 
 http.createServer((req, res) => {

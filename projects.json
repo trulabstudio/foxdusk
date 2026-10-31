@@ -1,0 +1,99 @@
+{
+  "clients": [
+    "Qudani Jewels",
+    "Trulab Studio",
+    "Truveldt"
+  ],
+  "projects": [
+    {
+      "client": "Sample: Fashion Brand",
+      "type": "Website",
+      "problem": "Customers could not find clear information and enquiries got lost.",
+      "built": "A clear website that takes enquiries and sends them to the right person.",
+      "result": "Sample result text goes here.",
+      "image": "samples/website.svg",
+      "featured": true
+    },
+    {
+      "client": "Sample: Retail Store",
+      "type": "Ecommerce",
+      "problem": "Orders came through chat and stock was tracked by hand.",
+      "built": "An online store with products, orders and payments in one place.",
+      "result": "Sample result text goes here.",
+      "image": "samples/ecommerce.svg",
+      "featured": true
+    },
+    {
+      "client": "Sample: Manufacturer",
+      "type": "HR system",
+      "problem": "Attendance was on paper and reports took days to prepare.",
+      "built": "An attendance and leave system with records in one place.",
+      "result": "",
+      "image": "samples/hr.svg",
+      "featured": true
+    },
+    {
+      "client": "Sample: Services Firm",
+      "type": "Reporting",
+      "problem": "Staff rebuilt the same monthly report by hand.",
+      "built": "A reporting system that prepares the numbers from one source.",
+      "result": "Sample result text goes here.",
+      "image": "samples/reporting.svg",
+      "featured": true
+    },
+    {
+      "client": "Sample: Logistics Company",
+      "type": "Automation",
+      "problem": "Each order was retyped across three tools.",
+      "built": "An automated flow that passes order data along by itself.",
+      "result": "",
+      "image": "samples/automation.svg",
+      "featured": false
+    },
+    {
+      "client": "Sample: Law Firm",
+      "type": "Website",
+      "problem": "Clients could not tell which services the firm offered.",
+      "built": "A clean website that explains each service and takes appointment requests.",
+      "result": "Sample result text goes here.",
+      "image": "samples/website.svg",
+      "featured": false
+    },
+    {
+      "client": "Sample: Beauty Brand",
+      "type": "Ecommerce",
+      "problem": "Sales relied on replying to every customer by hand.",
+      "built": "An online store with a simple checkout and order tracking.",
+      "result": "",
+      "image": "samples/ecommerce.svg",
+      "featured": false
+    },
+    {
+      "client": "Sample: Property Group",
+      "type": "HR system",
+      "problem": "Leave requests were lost across chats and forms.",
+      "built": "A leave and staff records system with clear approvals.",
+      "result": "Sample result text goes here.",
+      "image": "samples/hr.svg",
+      "featured": false
+    },
+    {
+      "client": "Sample: Clinic Chain",
+      "type": "Reporting",
+      "problem": "Each branch sent numbers in a different format.",
+      "built": "A single report that brings every branch into one view.",
+      "result": "",
+      "image": "samples/reporting.svg",
+      "featured": false
+    },
+    {
+      "client": "Sample: Training Provider",
+      "type": "Automation",
+      "problem": "Staff sent every reminder and certificate by hand.",
+      "built": "An automated flow for reminders and certificates.",
+      "result": "Sample result text goes here.",
+      "image": "samples/automation.svg",
+      "featured": false
+    }
+  ]
+}
