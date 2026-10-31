@@ -1,3 +1,4 @@
+// Built by Foxdusk
 // Shared by the homepage and the work page. All content lives in projects.json.
 window.foxduskProjects = (() => {
   'use strict';

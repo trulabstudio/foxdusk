@@ -1,0 +1,12 @@
+{
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [{ "key": "X-Built-By", "value": "Foxdusk" }]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+    }
+  ]
+}

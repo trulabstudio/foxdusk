@@ -1,6 +1,11 @@
+// Built by Foxdusk
 // The phone menu, shared by the homepage and the work page.
 (() => {
   'use strict';
+
+  if ('serviceWorker' in navigator) {
+    addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+  }
 
   const button = document.getElementById('menuButton');
   const nav = document.getElementById('mainNav');

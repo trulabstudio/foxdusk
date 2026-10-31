@@ -1,3 +1,4 @@
+// Built by Foxdusk
 (() => {
   'use strict';
 

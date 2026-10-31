@@ -1,0 +1,49 @@
+<!doctype html>
+<!-- Built by Foxdusk -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>You're offline | Foxdusk</title>
+  <meta name="generator" content="Foxdusk">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#212124">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <style>
+    body {
+      display: grid;
+      place-content: center;
+      min-height: 100dvh;
+      margin: 0;
+      padding: 24px 20px;
+      background: #212124;
+      color: #fff;
+      font: 400 1rem/1.55 'Poppins', 'Helvetica Neue', Arial, sans-serif;
+      letter-spacing: -.02em;
+    }
+    img { width: 56px; height: 56px; margin-bottom: 24px; border-radius: 12px; }
+    h1 { margin: 0 0 8px; font-size: 1.75rem; font-weight: 500; line-height: 1.2; }
+    p { max-width: 34ch; margin: 0 0 24px; color: #b9b9be; }
+    button {
+      min-height: 44px;
+      padding: 0 24px;
+      border: 0;
+      border-radius: 99px;
+      background: #f7b500;
+      color: #212124;
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    button:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <main>
+    <img src="icons/icon-192.png" alt="">
+    <h1>You're offline</h1>
+    <p>This page needs an internet connection. Check your connection, then try again.</p>
+    <button type="button" onclick="location.reload()">Try again</button>
+  </main>
+</body>
+</html>
