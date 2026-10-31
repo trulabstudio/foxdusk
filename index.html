@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Foxdusk: Catch the Last Light</title>
+  <meta name="description" content="Foxdusk is a small browser game. Help a fox catch fireflies, dodge owls and keep the night away. Free, no sign-up, works offline.">
+  <link rel="canonical" href="https://foxdusk.com/">
+  <meta property="og:title" content="Foxdusk: Catch the Last Light">
+  <meta property="og:description" content="Help a fox catch fireflies, dodge owls and keep the night away.">
+  <meta property="og:url" content="https://foxdusk.com/">
+  <meta property="og:image" content="https://foxdusk.com/icons/icon-512.png">
+  <meta name="theme-color" content="#1b1238">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Foxdusk">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="game" aria-label="Foxdusk game: a fox catching fireflies in a meadow at dusk"></canvas>
+
+  <div class="hud" id="hud" hidden>
+    <div class="stat">
+      <span class="stat-label">Score</span>
+      <span class="stat-value" id="score">0</span>
+    </div>
+    <div class="light">
+      <span class="stat-label">Light <span class="streak" id="streak"></span></span>
+      <div class="light-track"><div class="light-fill" id="lightFill"></div></div>
+      <span class="mission" id="mission"></span>
+      <span class="powers" id="powers"></span>
+    </div>
+    <button class="icon-btn" id="pauseBtn" type="button" aria-label="Pause">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+    </button>
+    <button class="icon-btn" id="muteBtn" type="button" aria-label="Mute sound" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path id="muteWave" d="M16 8.5a5 5 0 0 1 0 7l-1.2-1.2a3.3 3.3 0 0 0 0-4.6z"/></svg>
+    </button>
+  </div>
+
+  <main class="panel-wrap" id="panelWrap">
+    <section class="panel">
+      <p class="soon">Coming soon</p>
+      <h1 id="panelTitle">Foxdusk</h1>
+      <p class="lede" id="panelText">The sun is going down. Catch the fireflies and keep the night away.</p>
+      <ul class="rules" id="rules">
+        <li><strong>Move</strong> with your finger, mouse or arrow keys.</li>
+        <li><strong>Catch</strong> fireflies to refill your light and grow bigger and stronger. Gold ones count for more.</li>
+        <li><strong>Dodge</strong> owls and purple wisps. A red ring shows where owls strike.</li>
+        <li><strong>Grab</strong> power-ups: shield, magnet and slow time.</li>
+        <li><strong>Survive</strong> each night by reaching its catch goal. It gets harder.</li>
+      </ul>
+      <button class="play" id="playBtn" type="button">Play</button>
+      <p class="best" id="best"></p>
+      <div class="skin" id="skin">
+        <!-- Psst. Type "goldfox", or try foxdusk.skin('gold') in the console. -->
+        <svg id="skinIcon" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#c98a12" d="M6 5l14 13-9 8zM42 5L28 18l9 8z"/>
+          <path fill="#ffc53d" d="M9 15h30l4 11-19 18L5 26z"/>
+          <path fill="#fff4df" d="M5 26l14 5 5 13zM43 26l-14 5-5 13z"/>
+          <path fill="#2a1204" d="M21 40h6l-3 4z"/>
+          <circle fill="#2a1204" cx="17" cy="25" r="2"/>
+          <circle fill="#2a1204" cx="31" cy="25" r="2"/>
+        </svg>
+        <span class="skin-name" id="skinName">Golden Fox skin</span>
+        <span class="skin-price" id="skinPrice">USD 30,000</span>
+        <span class="skin-hint" id="skinHint">Too pricey? Try hacking it.</span>
+      </div>
+      <button class="install" id="installBtn" type="button" hidden>Install the app</button>
+    </section>
+  </main>
+
+  <noscript><p class="noscript">Foxdusk is a game and needs JavaScript to run.</p></noscript>
+
+  <script src="game.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>
