@@ -86,6 +86,7 @@ async function stats(periodParam) {
     computers: active.reduce((n, l) => n + (l.activations || []).length, 0),
     series: [...buckets].map(([date, v]) => ({ date, ...v })),
     recent: orders.slice(0, 6).map((o) => ({ id: o.id, order_no: o.order_no, name: o.name, status: o.status, amount_rm: Number(o.amount_rm), created_at: o.created_at })),
+    to_review: orders.filter((o) => o.status === 'pending').slice(0, 5).map((o) => ({ id: o.id, order_no: o.order_no, name: o.name, status: o.status, amount_rm: Number(o.amount_rm), created_at: o.created_at })),
   };
 }
 
@@ -121,7 +122,7 @@ async function saveSettings(body, admin) {
   if (row.sales_open && (!row.bank_name || !row.account_name || !row.account_no)) throw S.httpError(400, 'Fill in the bank name, account name and account number before opening sales.');
   if (row.contact_email && !S.EMAIL_RE.test(row.contact_email)) throw S.httpError(400, 'Enter a valid contact email, or leave it empty.');
   if (row.stripe_enabled && !Stripe.ready()) throw S.httpError(400, 'Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Vercel first, then switch on card payment.');
-  if (row.duitnow_qr && !/^(https:\/\/|\/?[\w./-]+\.(png|jpe?g|webp|svg)$)/i.test(row.duitnow_qr)) throw S.httpError(400, 'The DuitNow QR must be an https:// link or an image path like icons/duitnow-qr.png.');
+  if (row.duitnow_qr && !/^(https:\/\/[^\s"'<>]+|\/?[\w./-]+\.(png|jpe?g|webp|svg))$/i.test(row.duitnow_qr)) throw S.httpError(400, 'The DuitNow QR must be an uploaded image or an https:// link.');
   try {
     await S.db('settings?on_conflict=id', { method: 'POST', prefer: 'resolution=merge-duplicates,return=minimal', body: row });
   } catch {
@@ -169,6 +170,17 @@ module.exports = S.handler(async (req, res) => {
   const now = new Date().toISOString();
 
   switch (body.action) {
+    case 'upload_qr': {
+      // DuitNow QR picture for the payment card. PNG, JPG or WEBP, up to 2 MB.
+      const TYPES = { 'image/png': ['png', (b) => b.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))], 'image/jpeg': ['jpg', (b) => b[0] === 0xff && b[1] === 0xd8], 'image/webp': ['webp', (b) => b.slice(0, 4).toString() === 'RIFF' && b.slice(8, 12).toString() === 'WEBP'] };
+      const t = TYPES[body.type];
+      if (!t) throw S.httpError(400, 'Upload a PNG, JPG or WEBP image.');
+      const buf = Buffer.from(String(body.data || ''), 'base64');
+      if (!buf.length || buf.length > 2 * 1024 * 1024) throw S.httpError(400, 'The image must be smaller than 2 MB.');
+      if (!t[1](buf)) throw S.httpError(400, 'That file is not a valid image.');
+      const url = await S.uploadSiteImage(`duitnow-qr-${Date.now()}.${t[0]}`, buf, body.type);
+      return S.send(res, 200, { ok: true, url });
+    }
     case 'save_settings':
       return S.send(res, 200, { ok: true, settings: await saveSettings(body, admin) });
     case 'approve': {

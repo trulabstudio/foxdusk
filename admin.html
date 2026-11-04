@@ -16,15 +16,33 @@
 <body>
   <!-- Sign in -->
   <main class="signin" id="login" hidden>
-    <form class="signin-card" id="loginForm">
-      <span class="lockup"><img class="mark" src="brand/foxdusk-logomark-orange.png" alt="" width="37" height="34"><img class="word" src="brand/foxdusk-wordmark-charcoal.png" alt="Foxdusk" width="108" height="17"></span>
-      <span class="label">Foxdusk AIOS</span>
-      <h1>Admin sign-in</h1>
-      <div class="field"><label for="lemail">Email</label><input class="input" id="lemail" type="email" autocomplete="username" required></div>
-      <div class="field"><label for="lpass">Password</label><input class="input" id="lpass" type="password" autocomplete="current-password" required></div>
-      <button class="btn btn-primary btn-block" type="submit" id="lbtn">Sign in</button>
-      <p class="msg err" id="lerr" role="alert" hidden></p>
-    </form>
+    <section class="signin-brand" aria-hidden="true">
+      <span class="lockup"><img class="mark" src="brand/foxdusk-logomark-orange.png" alt="" width="37" height="34"><img class="word" src="brand/foxdusk-wordmark-white.png" alt="" width="108" height="17"></span>
+      <div class="signin-pitch">
+        <span class="label">Foxdusk AIOS · Admin console</span>
+        <p class="signin-title">Orders, licences and payments in one place.</p>
+        <ul class="signin-points">
+          <li>Review bank transfers and send keys</li>
+          <li>Track revenue and active licences</li>
+          <li>Set the price and payment details</li>
+        </ul>
+      </div>
+      <small>© Trulab Production Sdn. Bhd.</small>
+    </section>
+    <section class="signin-panel">
+      <form class="signin-form" id="loginForm">
+        <span class="lockup signin-mobile-logo"><img class="mark" src="brand/foxdusk-logomark-orange.png" alt="" width="37" height="34"><img class="word" src="brand/foxdusk-wordmark-charcoal.png" alt="Foxdusk" width="108" height="17"></span>
+        <h1>Sign in</h1>
+        <p class="muted">Use your Foxdusk admin account.</p>
+        <div class="field"><label for="lemail">Work email</label><input class="input" id="lemail" type="email" autocomplete="username" placeholder="you@foxdusk.com" required></div>
+        <div class="field"><label for="lpass">Password</label>
+          <div class="pass-wrap"><input class="input" id="lpass" type="password" autocomplete="current-password" required><button class="pass-toggle" type="button" id="lshow" aria-label="Show password" aria-pressed="false">Show</button></div>
+        </div>
+        <p class="msg err" id="lerr" role="alert" hidden></p>
+        <button class="btn btn-primary btn-block" type="submit" id="lbtn">Sign in</button>
+        <p class="signin-note"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Restricted to authorised Foxdusk staff. Sign-ins are checked against the admin list.</p>
+      </form>
+    </section>
   </main>
 
   <!-- App -->

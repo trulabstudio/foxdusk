@@ -106,3 +106,11 @@ alter table public.settings add column if not exists contact_email text;
 alter table public.settings add column if not exists whatsapp_message text;
 update public.settings set whatsapp = coalesce(whatsapp, '60176982032'), contact_email = coalesce(contact_email, 'admin@foxdusk.com'),
   whatsapp_message = coalesce(whatsapp_message, 'Hi Foxdusk, I have a question about Foxdusk AIOS:') where id = 1;
+
+-- Public images for the website (DuitNow QR), uploaded from admin > Settings.
+-- Public on purpose: buyers' browsers load the QR straight from here. Safe to run again.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('site', 'site', true, 2097152, array['image/png', 'image/jpeg', 'image/webp'])
+on conflict (id) do update set public = true,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;

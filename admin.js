@@ -14,7 +14,7 @@ const ago = (iso) => {
   const h = Math.round(m / 60); if (h < 24) return `${h} h ago`;
   const d = Math.round(h / 24); return d < 30 ? `${d} d ago` : new Date(iso).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' });
 };
-const STATUS = { pending: 'Pending', approved: 'Paid', rejected: 'Rejected', awaiting_payment: 'Awaiting card payment', expired: 'Card payment not completed' };
+const STATUS = { pending: 'To review', approved: 'Paid', rejected: 'Rejected', awaiting_payment: 'Awaiting card payment', expired: 'Card payment not completed' };
 const METHOD = { bank_transfer: 'Bank transfer', stripe: 'Card / FPX (Stripe)' };
 const pill = (status, label) => `<span class="pill ${esc(status)}">${esc(label || STATUS[status] || status)}</span>`;
 
@@ -68,48 +68,47 @@ async function route() {
 }
 
 // ---------- dashboard ----------
+const PERIOD_NAME = { '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days', all: 'all time' };
+const periodSeg = (current) => `<div class="seg" role="group" aria-label="Period">${[['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days'], ['all', 'All time']].map(([k, l]) => `<button type="button" data-period="${k}" aria-pressed="${k === current}">${l}</button>`).join('')}</div>`;
+const kpi = (label, value, note, extra = '') => `<div class="kpi${extra}"><span class="kpi-label">${label}</span><b class="kpi-value">${value}</b><span class="kpi-note">${note}</span></div>`;
+const orderLine = (o) => `<li><button type="button" class="line" data-open="${esc(o.id)}"><span class="line-main"><b>${esc(o.name)}</b><small class="mono">${esc(o.order_no)} · ${esc(ago(o.created_at))}</small></span><span class="line-amount">${o.amount_rm ? esc(rm(o.amount_rm, 0)) : 'Free'}</span><span class="btn btn-primary btn-sm">Review</span></button></li>`;
+
 async function renderDashboard() {
   view().innerHTML = '<div class="page"><p class="muted">Loading…</p></div>';
   const s = await api({ action: 'stats', period: state.period });
   state.stats = s; state.counts.pending = s.pending; refreshBadge();
-  const periodName = { '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days', all: 'all time' }[s.period];
+  const p = PERIOD_NAME[s.period];
   view().innerHTML = `<div class="page">
     <header class="page-head">
-      <div><span class="label">Overview</span><h1>Sales</h1></div>
-      <div class="seg" role="group" aria-label="Period">${[['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days'], ['all', 'All time']].map(([k, l]) => `<button type="button" data-period="${k}" aria-pressed="${k === s.period}">${l}</button>`).join('')}</div>
+      <div><span class="label">Overview</span><h1>Dashboard</h1><p class="lede">Sales, orders to review and licences at a glance.</p></div>
+      ${periodSeg(s.period)}
     </header>
-    <div class="dash-top">
-      <section class="hero-card" aria-label="Revenue">
-        <div><span class="tile-label">Revenue · ${periodName}</span><b class="hero-value">${rm(s.revenue)}</b>
-          <span class="hero-sub">${s.paid_orders} paid order${s.paid_orders === 1 ? '' : 's'}${s.paid_orders ? ` · average ${rm(s.average_order)}` : ''}</span></div>
-        <div class="hero-foot"><div><b>${rm(s.revenue_all_time, 0)}</b><span>All-time revenue</span></div><div><b>${s.buyers_all_time}</b><span>Buyers all time</span></div></div>
-      </section>
-      <div class="tiles">
-        <div class="tile ${s.pending ? 'attention' : ''}"><span class="tile-label">Waiting for review</span><span class="tile-value">${s.pending}</span>${s.pending ? '<button class="link-btn" type="button" data-go-pending>Review now →</button>' : '<span class="tile-note">All caught up</span>'}</div>
-        <div class="tile"><span class="tile-label">Paid orders</span><span class="tile-value">${s.paid_orders}</span><span class="tile-note">${periodName}</span></div>
-        <div class="tile"><span class="tile-label">Rejected</span><span class="tile-value">${s.rejected}</span><span class="tile-note">${periodName}</span></div>
-        <div class="tile"><span class="tile-label">Active licences</span><span class="tile-value">${s.active_licences}</span><span class="tile-note">${s.revoked_licences} cancelled</span></div>
-        <div class="tile"><span class="tile-label">Computers activated</span><span class="tile-value">${s.computers}</span><span class="tile-note">on active licences</span></div>
-        <div class="tile"><span class="tile-label">Free licences</span><span class="tile-value">${s.free_licences}</span><span class="tile-note">${periodName}, not sales</span></div>
-      </div>
+
+    <div class="grid-4">
+      ${kpi('Revenue', esc(rm(s.revenue, 0)), `${p} · all time ${esc(rm(s.revenue_all_time, 0))}`)}
+      ${kpi('Paid orders', s.paid_orders, `${p} · ${s.buyers_all_time} buyer${s.buyers_all_time === 1 ? '' : 's'} all time`)}
+      ${kpi('To review', s.pending, s.pending ? '<button class="link-btn" type="button" data-go-pending>Review now →</button>' : 'All caught up', s.pending ? ' kpi-alert' : '')}
+      ${kpi('Rejected', s.rejected, p)}
     </div>
-    <section class="card chart-card">
-      <div class="card-head"><h2>Revenue per ${s.unit}</h2><button class="link-btn" type="button" id="tableToggle" aria-expanded="false">Show as table</button></div>
-      <div class="chart" id="chart"></div>
-      <table class="data-table" id="chartTable" hidden><thead><tr><th>${s.unit === 'month' ? 'Month' : 'Day'}</th><th class="n">Paid orders</th><th class="n">Revenue</th></tr></thead>
-        <tbody>${s.series.slice().reverse().map((d) => `<tr><td>${esc(fmtBucket(d.date, s.unit, true))}</td><td class="n">${d.orders}</td><td class="n">${rm(d.revenue)}</td></tr>`).join('')}</tbody></table>
-    </section>
-    <div class="dash-bottom">
-      <section class="card"><div class="card-head"><h2>Latest orders</h2><a class="link-btn" href="#orders">See all</a></div>
-        ${s.recent.length ? `<ul class="recent">${s.recent.map((o) => `<li><button type="button" data-open="${esc(o.id)}"><span><b>${esc(o.name)}</b><small>${esc(o.order_no)} · ${esc(ago(o.created_at))}</small></span><span class="num">${o.amount_rm ? rm(o.amount_rm) : 'Free'}</span>${pill(o.status)}</button></li>`).join('')}</ul>` : '<p class="empty">No orders yet. They appear here as soon as someone buys.</p>'}
+
+    <div class="grid-main">
+      <section class="card">
+        <div class="card-head"><h2>Revenue per ${s.unit}</h2><button class="link-btn" type="button" id="tableToggle" aria-expanded="false">Show as table</button></div>
+        <div class="chart" id="chart"></div>
+        <table class="data-table" id="chartTable" hidden><thead><tr><th>${s.unit === 'month' ? 'Month' : 'Day'}</th><th class="n">Paid orders</th><th class="n">Revenue</th></tr></thead>
+          <tbody>${s.series.slice().reverse().map((d) => `<tr><td>${esc(fmtBucket(d.date, s.unit, true))}</td><td class="n">${d.orders}</td><td class="n">${rm(d.revenue)}</td></tr>`).join('')}</tbody></table>
       </section>
-      <section class="card"><div class="card-head"><h2>At a glance</h2></div>
-        <dl class="facts">
-          <div><dt>Approval rate</dt><dd>${s.paid_orders + s.rejected ? Math.round((s.paid_orders / (s.paid_orders + s.rejected)) * 100) + '%' : '–'}</dd></div>
-          <div><dt>Average order</dt><dd>${s.paid_orders ? rm(s.average_order) : '–'}</dd></div>
-          <div><dt>Computers per licence</dt><dd>${s.active_licences ? (s.computers / s.active_licences).toFixed(1) : '–'}</dd></div>
-        </dl>
+      <section class="card">
+        <div class="card-head"><h2>To review</h2><a class="link-btn" href="#orders">All orders</a></div>
+        ${(s.to_review || []).length ? `<ul class="lines">${s.to_review.map(orderLine).join('')}</ul>` : '<div class="empty-small"><b>All caught up</b><span>New orders appear here.</span></div>'}
       </section>
+    </div>
+
+    <h2 class="section-title">Licences</h2>
+    <div class="grid-3">
+      ${kpi('Active licences', s.active_licences, `${s.revoked_licences} cancelled`)}
+      ${kpi('Computers activated', s.computers, 'on active licences')}
+      ${kpi('Free licences', s.free_licences, `${p} · not counted as sales`)}
     </div>
   </div>`;
   view().querySelectorAll('[data-period]').forEach((b) => { b.onclick = () => { state.period = b.dataset.period; renderDashboard().catch((e) => toast(e.message, true)); }; });
@@ -196,13 +195,15 @@ async function renderOrders() {
   view().innerHTML = '<div class="page"><p class="muted">Loading…</p></div>';
   await loadOrders();
   view().innerHTML = `<div class="page">
-    <header class="page-head"><div><span class="label">Orders</span><h1>Orders</h1><p class="lede">Check the payment in your bank, then confirm to send the key.</p></div>
-      <button class="btn btn-ghost" type="button" id="issueOpen">Free licence</button></header>
+    <header class="page-head">
+      <div><span class="label">Orders</span><h1>Orders</h1><p class="lede">Check the payment in your bank, then confirm to send the key.</p></div>
+      <button class="btn btn-ghost" type="button" id="issueOpen">Free licence</button>
+    </header>
     <div class="toolbar">
-      <div class="seg" role="group" aria-label="Status">${[['pending', 'Pending'], ['approved', 'Paid'], ['rejected', 'Rejected'], ['all', 'All']].map(([k, l]) => `<button type="button" data-tab="${k}" aria-pressed="${k === state.tab}">${l}${k !== 'all' ? `<span class="n">${state.counts[k] ?? 0}</span>` : ''}</button>`).join('')}</div>
-      <input class="input" id="search" type="search" placeholder="Search name, email or order no." value="${esc(state.q)}">
+      <div class="seg" role="group" aria-label="Status">${[['pending', 'To review'], ['approved', 'Paid'], ['rejected', 'Rejected'], ['all', 'All']].map(([k, l]) => `<button type="button" data-tab="${k}" aria-pressed="${k === state.tab}">${l}${k !== 'all' ? `<span class="n">${state.counts[k] ?? 0}</span>` : ''}</button>`).join('')}</div>
+      <input class="input search" id="search" type="search" placeholder="Search name, email or order no." value="${esc(state.q)}">
     </div>
-    <div class="table" id="orderTable"></div>
+    <div class="card list-card" id="orderTable"></div>
   </div>`;
   paintTable();
   view().querySelectorAll('[data-tab]').forEach((b) => { b.onclick = async () => { state.tab = b.dataset.tab; await renderOrders(); }; });
@@ -212,18 +213,19 @@ async function renderOrders() {
 function paintTable() {
   const box = $('#orderTable');
   if (!state.orders.length) {
-    box.innerHTML = `<p class="empty">${state.q ? 'No orders match your search.' : state.tab === 'pending' ? 'Nothing to review. New orders appear here.' : 'No orders here yet.'}</p>`;
+    box.innerHTML = `<div class="empty-small"><b>${state.q ? 'No orders match your search' : state.tab === 'pending' ? 'All caught up' : 'No orders here yet'}</b><span>${state.tab === 'pending' && !state.q ? 'New orders appear here.' : ''}</span></div>`;
     return;
   }
-  box.innerHTML = `<div class="thead"><span>Buyer</span><span>Order</span><span>Amount</span><span>Status</span><span></span></div>` + state.orders.map((o) => {
+  box.innerHTML = `<div class="orow orow-head" aria-hidden="true"><span>Buyer</span><span>Order</span><span class="r">Amount</span><span>Status</span><span></span></div>` + state.orders.map((o) => {
     const lic = (o.licenses || [])[0];
     const free = o.status === 'approved' && Number(o.amount_rm) === 0;
-    return `<button class="trow" type="button" data-open="${esc(o.id)}">
-      <span class="who"><b>${esc(o.name)}</b><small>${esc(o.email)}</small></span>
-      <span class="meta"><b class="mono">${esc(o.order_no)}</b><small>${esc(when(o.created_at))}</small></span>
-      <span class="amount">${free ? 'Free' : esc(rm(o.amount_rm))}</span>
-      <span class="status">${free ? pill('free', 'Free licence') : pill(o.status)}${lic && lic.status === 'revoked' ? ' ' + pill('revoked', 'Key cancelled') : ''}</span>
-      <span class="act">${o.status === 'pending' ? '<span class="btn btn-primary btn-sm go">Review</span>' : '<span class="chev" aria-hidden="true">›</span>'}</span>
+    const status = free ? pill('free', 'Free licence') : lic && lic.status === 'revoked' ? pill('revoked', 'Key cancelled') : pill(o.status);
+    return `<button class="orow" type="button" data-open="${esc(o.id)}">
+      <span class="o-who"><b>${esc(o.name)}</b><small>${esc(o.email)}</small></span>
+      <span class="o-meta"><b class="mono">${esc(o.order_no)}</b><small>${esc(when(o.created_at))}</small></span>
+      <span class="o-amount r">${free ? 'Free' : esc(rm(o.amount_rm))}</span>
+      <span class="o-status">${status}</span>
+      <span class="o-act">${o.status === 'pending' ? '<span class="btn btn-primary btn-sm">Review</span>' : '<span class="chev" aria-hidden="true">›</span>'}</span>
     </button>`;
   }).join('');
   box.querySelectorAll('[data-open]').forEach((b) => { b.onclick = () => openOrder(b.dataset.open); });
@@ -323,58 +325,111 @@ async function issueFlow() {
 }
 
 // ---------- settings ----------
+const readAsDataUrl = (blob) => new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fail; r.readAsDataURL(blob); });
+// A big photo of a QR code is redrawn as a crisp PNG no wider than 1000 px.
+async function shrinkQr(file) {
+  if (file.size <= 1.5 * 1024 * 1024) return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = url; });
+    const scale = Math.min(1, 1000 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * scale); c.height = Math.round(img.naturalHeight * scale);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise((ok) => c.toBlob(ok, 'image/png'));
+  } finally { URL.revokeObjectURL(url); }
+}
+
 async function renderSettings() {
   view().innerHTML = '<div class="page"><p class="muted">Loading…</p></div>';
   const s = await api({ action: 'settings' });
   state.settings = s;
   view().innerHTML = `<div class="page">
-    <header class="page-head"><div><span class="label">Settings</span><h1>Price and payment</h1><p class="lede">Changes show on foxdusk.com within a minute of saving. No redeploy needed.</p></div></header>
+    <header class="page-head"><div><span class="label">Settings</span><h1>Settings</h1><p class="lede">Changes show on foxdusk.com within a minute of saving.</p></div></header>
     ${s.source !== 'supabase' ? '<p class="msg info" style="margin:0 0 16px">These values come from aios.json because the settings table is missing. Run the latest <b>supabase/schema.sql</b> in the Supabase SQL Editor, then save here.</p>' : ''}
-    <div class="settings-grid">
-      <form id="settingsForm" novalidate>
-        <section class="card"><div class="card-head"><h2>Sales</h2></div>
+    <form id="settingsForm" novalidate>
+      <div class="grid-2">
+        <section class="card">
+          <div class="card-head"><h2>Sales</h2></div>
           <label class="switch"><span><b>Accept new orders</b><span>When off, the buy form shows "Sales open soon".</span></span><input type="checkbox" id="sOpen" ${s.sales_open ? 'checked' : ''}></label>
           <div class="field"><label for="sPrice">Price</label><div class="input-prefix"><span>RM</span><input class="input" id="sPrice" type="number" inputmode="decimal" min="0" max="100000" step="1" value="${esc(s.price_rm)}"></div>
-            <span class="hint">One-time price for one licence (2 computers). New orders use the new price; past orders keep theirs.</span></div>
+            <span class="hint">One licence for 2 computers. Orders already placed keep their price.</span></div>
+          <p class="buyer-sees" id="buyerSees"></p>
         </section>
-        <section class="card"><div class="card-head"><h2>Card and FPX (Stripe)</h2>${s.stripe_ready ? `<span class="pill ${s.stripe_mode === 'live' ? 'active' : 'pending'}">${s.stripe_mode === 'live' ? 'Live keys' : 'Test keys'}</span>` : ''}</div>
-          <label class="switch${s.stripe_ready ? '' : ' off'}"><span><b>Accept card and FPX payments</b><span>${s.stripe_ready ? 'Buyers can pay on Stripe, and the key is emailed automatically once Stripe confirms the payment.' : 'Not set up yet. Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Vercel (see SETUP-AIOS.md), then switch this on.'}</span></span><input type="checkbox" id="sStripe" ${s.stripe_enabled ? 'checked' : ''} ${s.stripe_ready ? '' : 'disabled'}></label>
-          <p class="hint muted" style="margin-top:12px;font-size:13px">Bank transfer stays available either way.</p>
+
+        <section class="card">
+          <div class="card-head"><h2>Card and FPX (Stripe)</h2>${s.stripe_ready ? `<span class="pill ${s.stripe_mode === 'live' ? 'active' : 'pending'}">${s.stripe_mode === 'live' ? 'Live keys' : 'Test keys'}</span>` : '<span class="pill">Not set up</span>'}</div>
+          <label class="switch${s.stripe_ready ? '' : ' off'}"><span><b>Accept card and FPX</b><span>${s.stripe_ready ? 'The key is emailed automatically once Stripe confirms the payment.' : 'Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Vercel first (SETUP-AIOS.md, step 4c).'}</span></span><input type="checkbox" id="sStripe" ${s.stripe_enabled ? 'checked' : ''} ${s.stripe_ready ? '' : 'disabled'}></label>
+          <p class="hint" style="margin-top:12px">Bank transfer stays available either way.</p>
         </section>
-        <section class="card"><div class="card-head"><h2>Payment details</h2></div>
+
+        <section class="card">
+          <div class="card-head"><h2>Bank transfer</h2></div>
           <div class="field"><label for="sBank">Bank</label><input class="input" id="sBank" maxlength="80" value="${esc(s.bank_name)}" placeholder="Maybank"></div>
           <div class="field"><label for="sName">Account name</label><input class="input" id="sName" maxlength="120" value="${esc(s.account_name)}"></div>
           <div class="field"><label for="sNo">Account number</label><input class="input" id="sNo" maxlength="40" inputmode="numeric" value="${esc(s.account_no)}"></div>
-          <div class="field"><label for="sQr">DuitNow QR image <span class="muted">(optional)</span></label><input class="input" id="sQr" maxlength="300" value="${esc(s.duitnow_qr)}" placeholder="icons/duitnow-qr.png or https://…"><span class="hint">Shown under the account number when filled.</span></div>
+          <div class="field"><span class="field-label">DuitNow QR <span class="muted">(optional)</span></span>
+            <div class="qr-box">
+              <div class="qr-thumb" id="qrThumb"></div>
+              <div class="qr-actions">
+                <label class="btn btn-ghost btn-sm" for="qrFile">Upload image</label>
+                <input type="file" id="qrFile" accept="image/png,image/jpeg,image/webp" hidden>
+                <button class="link-btn" type="button" id="qrRemove">Remove</button>
+                <span class="hint">PNG, JPG or WEBP. Shown under the account number.</span>
+              </div>
+            </div>
+            <input type="hidden" id="sQr" value="${esc(s.duitnow_qr)}">
+          </div>
         </section>
-        <section class="card"><div class="card-head"><h2>Contact</h2></div>
-          <div class="field"><label for="sWa">WhatsApp number</label><input class="input" id="sWa" type="tel" inputmode="tel" maxlength="20" value="${esc(s.whatsapp || '')}" placeholder="012 345 6789"><span class="hint">Used by every WhatsApp button on the website. Leave empty to show email instead.</span></div>
-          <div class="field"><label for="sWaMsg">WhatsApp opening message</label><textarea class="input textarea" id="sWaMsg" maxlength="300" rows="2">${esc(s.whatsapp_message || '')}</textarea><span class="hint">Already typed for the buyer when they tap a WhatsApp button. <a class="link-btn" id="waTry" href="#" target="_blank" rel="noopener">Try it ↗</a></span></div>
-          <div class="field"><label for="sMail">Contact email</label><input class="input" id="sMail" type="email" maxlength="254" value="${esc(s.contact_email || '')}" placeholder="admin@foxdusk.com"><span class="hint">Shown at the bottom of the website.</span></div>
+
+        <section class="card">
+          <div class="card-head"><h2>Contact</h2></div>
+          <div class="field"><label for="sWa">WhatsApp number</label><input class="input" id="sWa" type="tel" inputmode="tel" maxlength="20" value="${esc(s.whatsapp || '')}" placeholder="012 345 6789"><span class="hint">Every WhatsApp button on the website. Leave empty to show email instead.</span></div>
+          <div class="field"><label for="sWaMsg">WhatsApp opening message</label><textarea class="input textarea" id="sWaMsg" maxlength="300" rows="2">${esc(s.whatsapp_message || '')}</textarea><span class="hint">Already typed for the buyer. <a class="link-btn" id="waTry" href="#" target="_blank" rel="noopener">Try it ↗</a></span></div>
+          <div class="field"><label for="sMail">Contact email</label><input class="input" id="sMail" type="email" maxlength="254" value="${esc(s.contact_email || '')}" placeholder="admin@foxdusk.com"></div>
         </section>
-        <div class="save-bar"><small>${s.updated_at ? `Last saved ${esc(when(s.updated_at))}${s.updated_by ? ` by ${esc(s.updated_by)}` : ''}` : 'Not saved yet'}</small><button class="btn btn-primary" type="submit" id="sSave">Save changes</button></div>
-      </form>
-      <aside class="preview" aria-label="What buyers see">
-        <span class="label">What buyers see</span>
-        <dl><div><dt>Amount</dt><dd class="p-amount" id="pAmount"></dd></div><div><dt>Bank</dt><dd id="pBank"></dd></div><div><dt>Account name</dt><dd id="pName"></dd></div><div><dt>Account number</dt><dd id="pNo"></dd></div></dl>
-        <span class="p-state" id="pState"></span> <span class="p-state" id="pCard"></span>
-      </aside>
-    </div>
+      </div>
+
+      <div class="save-bar">
+        <span id="saveState">${s.updated_at ? `Last saved ${esc(when(s.updated_at))}${s.updated_by ? ` by ${esc(s.updated_by)}` : ''}` : 'Not saved yet'}</span>
+        <button class="btn btn-primary" type="submit" id="sSave">Save changes</button>
+      </div>
+    </form>
   </div>`;
-  const preview = () => {
+
+  const form = $('#settingsForm');
+  const showQr = () => {
+    const url = $('#sQr').value;
+    $('#qrThumb').innerHTML = url ? `<img src="${esc(url)}" alt="DuitNow QR">` : '<span>No QR</span>';
+    $('#qrRemove').hidden = !url;
+  };
+  const refresh = () => {
     const open = $('#sOpen').checked; const price = Number($('#sPrice').value);
-    $('#pAmount').textContent = open && price > 0 ? rm(price) : 'Coming soon';
-    $('#pBank').textContent = $('#sBank').value || '–';
-    $('#pName').textContent = $('#sName').value || '–';
-    $('#pNo').textContent = $('#sNo').value || '–';
-    $('#pState').textContent = open && price > 0 ? 'Buy form is open' : 'Buy form shows "Sales open soon"';
-    $('#pCard').textContent = $('#sStripe').checked ? 'Card / FPX: on' : 'Card / FPX: off';
+    $('#buyerSees').innerHTML = `Buyers see <b>${open && price > 0 ? esc(rm(price)) : 'Sales open soon'}</b>${$('#sStripe').checked ? ' · card / FPX on' : ''}`;
     let wa = $('#sWa').value.replace(/\D/g, ''); if (wa.startsWith('0')) wa = `60${wa.slice(1)}`;
     $('#waTry').href = wa ? `https://wa.me/${wa}?text=${encodeURIComponent($('#sWaMsg').value)}` : '#';
     $('#waTry').hidden = !wa;
   };
-  $('#settingsForm').addEventListener('input', preview); preview();
-  $('#settingsForm').addEventListener('submit', async (e) => {
+  let dirty = false;
+  const markDirty = () => { if (!dirty) { dirty = true; $('#saveState').textContent = 'Unsaved changes'; $('#saveState').classList.add('dirty'); } refresh(); };
+  form.addEventListener('input', markDirty);
+  showQr(); refresh();
+
+  $('#qrFile').addEventListener('change', async (e) => {
+    const file = e.target.files[0]; e.target.value = '';
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) return toast('Choose a PNG, JPG or WEBP image.', true);
+    $('#qrThumb').innerHTML = '<span>Uploading…</span>';
+    try {
+      const blob = await shrinkQr(file);
+      const data = String(await readAsDataUrl(blob)).split(',')[1];
+      const r = await api(null, { action: 'upload_qr', type: blob.type || file.type, data });
+      $('#sQr').value = r.url; showQr(); markDirty();
+      toast('QR uploaded. Click Save changes to show it on the website.');
+    } catch (err) { showQr(); toast(err.message, true); }
+  });
+  $('#qrRemove').onclick = () => { $('#sQr').value = ''; showQr(); markDirty(); };
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const price = Number($('#sPrice').value);
     if (state.settings.price_rm !== price && !(await ask(`Change the price to ${rm(price)}?`, `foxdusk.com will show ${rm(price)} within a minute. Orders already placed keep their price.`, 'Change price'))) return;
@@ -403,11 +458,12 @@ async function start() {
   if (!cfg.supabaseUrl) throw new Error(cfg.error || 'Admin is not set up yet.');
   supabase = createClient(cfg.supabaseUrl, cfg.anonKey, { auth: { persistSession: true, autoRefreshToken: true } });
 
+  $('#lshow').onclick = (e) => { const i = $('#lpass'); const show = i.type === 'password'; i.type = show ? 'text' : 'password'; e.currentTarget.textContent = show ? 'Hide' : 'Show'; e.currentTarget.setAttribute('aria-pressed', String(show)); e.currentTarget.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); };
   $('#loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    $('#lerr').hidden = true; $('#lbtn').disabled = true;
+    $('#lerr').hidden = true; $('#lbtn').disabled = true; $('#lbtn').textContent = 'Signing in…';
     const { error } = await supabase.auth.signInWithPassword({ email: $('#lemail').value.trim(), password: $('#lpass').value });
-    $('#lbtn').disabled = false;
+    $('#lbtn').disabled = false; $('#lbtn').textContent = 'Sign in';
     if (error) { $('#lerr').textContent = error.message === 'Invalid login credentials' ? 'Wrong email or password.' : error.message; $('#lerr').hidden = false; return; }
     $('#lpass').value = '';
     enter();
