@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- Built by Foxdusk -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Foxdusk AIOS admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#faf7f2">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <!-- Sign in -->
+  <main class="signin" id="login" hidden>
+    <form class="signin-card" id="loginForm">
+      <span class="lockup"><img class="mark" src="brand/foxdusk-logomark-orange.png" alt="" width="37" height="34"><img class="word" src="brand/foxdusk-wordmark-charcoal.png" alt="Foxdusk" width="108" height="17"></span>
+      <span class="label">Foxdusk AIOS</span>
+      <h1>Admin sign-in</h1>
+      <div class="field"><label for="lemail">Email</label><input class="input" id="lemail" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="lpass">Password</label><input class="input" id="lpass" type="password" autocomplete="current-password" required></div>
+      <button class="btn btn-primary btn-block" type="submit" id="lbtn">Sign in</button>
+      <p class="msg err" id="lerr" role="alert" hidden></p>
+    </form>
+  </main>
+
+  <!-- App -->
+  <div class="app" id="app" hidden>
+    <aside class="side">
+      <a class="lockup" href="#dashboard" aria-label="Foxdusk AIOS admin"><img class="mark" src="brand/foxdusk-logomark-orange.png" alt="" width="37" height="34"><img class="word" src="brand/foxdusk-wordmark-charcoal.png" alt="Foxdusk" width="108" height="17"></a>
+      <nav class="side-nav" aria-label="Admin">
+        <a href="#dashboard" data-nav="dashboard"><svg viewBox="0 0 24 24"><path d="M4 13h6V4H4zM14 20h6v-9h-6zM14 4v4h6V4zM4 20h6v-3H4z"/></svg>Dashboard</a>
+        <a href="#orders" data-nav="orders"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>Orders<span class="badge" id="pendingBadge" hidden></span></a>
+        <a href="#settings" data-nav="settings"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Settings</a>
+      </nav>
+      <div class="side-foot">
+        <a class="side-link" href="/" target="_blank" rel="noopener">View website ↗</a>
+        <span class="side-who" id="who"></span>
+        <button class="btn btn-ghost btn-sm" type="button" id="logout">Sign out</button>
+      </div>
+    </aside>
+    <main class="main" id="view" tabindex="-1"></main>
+  </div>
+
+  <!-- Order details -->
+  <div class="drawer-wrap" id="drawerWrap" hidden>
+    <div class="drawer-backdrop" data-close-drawer></div>
+    <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitle"></aside>
+  </div>
+
+  <!-- Confirm -->
+  <dialog id="confirmDlg">
+    <form method="dialog">
+      <h2 id="confirmTitle"></h2>
+      <p class="muted" id="confirmText"></p>
+      <div class="dlg-actions"><button class="btn btn-ghost" value="cancel" formnovalidate>Cancel</button><button class="btn btn-primary" id="confirmOk" value="ok"></button></div>
+    </form>
+  </dialog>
+
+  <!-- Reject -->
+  <dialog id="rejectDlg">
+    <form method="dialog">
+      <h2>Reject this order?</h2>
+      <p class="muted">The buyer gets an email asking for the correct receipt.</p>
+      <div class="field"><label for="reason">Reason (shown to the buyer)</label><textarea class="input textarea" id="reason" maxlength="500" placeholder="We could not find this transfer in our account."></textarea></div>
+      <label class="check"><input type="checkbox" id="rejectNotify" checked><span>Email the buyer</span></label>
+      <div class="dlg-actions"><button class="btn btn-ghost" value="cancel" formnovalidate>Cancel</button><button class="btn btn-danger" value="ok">Reject order</button></div>
+    </form>
+  </dialog>
+
+  <!-- Free licence -->
+  <dialog id="issueDlg">
+    <form method="dialog">
+      <h2>Free licence</h2>
+      <p class="muted">For yourself, testers or partners. It is not counted as a sale.</p>
+      <div class="field"><label for="iname">Name</label><input class="input" id="iname" maxlength="120"></div>
+      <div class="field"><label for="iemail">Email</label><input class="input" id="iemail" type="email" maxlength="254"></div>
+      <label class="check"><input type="checkbox" id="inotify" checked><span>Email the key and download link</span></label>
+      <div class="dlg-actions"><button class="btn btn-ghost" value="cancel" formnovalidate>Cancel</button><button class="btn btn-primary" value="ok">Create licence</button></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" hidden></div>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

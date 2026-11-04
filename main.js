@@ -15,12 +15,12 @@
 
   function contactHref(message) {
     if (CONTACT.whatsapp) return `https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(message)}`;
-    return `mailto:${CONTACT.email}?subject=${encodeURIComponent('Project enquiry')}&body=${encodeURIComponent(message)}`;
+    return `mailto:${CONTACT.email}?subject=${encodeURIComponent('Foxdusk AIOS question')}&body=${encodeURIComponent(message)}`;
   }
 
   $('whatsappLink').querySelector('.btn-label').textContent = CONTACT.whatsapp ? 'Message us on WhatsApp' : 'Email us';
-  $('whatsappLink').href = contactHref("Hi Foxdusk, I'd like to talk about a project:");
-  $('waFloat').href = contactHref("Hi Foxdusk, I'd like to talk about a project:");
+  $('whatsappLink').href = contactHref('Hi Foxdusk, I have a question about Foxdusk AIOS:');
+  $('waFloat').href = contactHref('Hi Foxdusk, I have a question about Foxdusk AIOS:');
   $('emailLink').textContent = CONTACT.email;
   $('emailLink').href = `mailto:${CONTACT.email}`;
 
@@ -48,8 +48,8 @@
 
   // ---------- 1. Hero: a long scene, timed in screen heights (vh) scrolled ----------
 
-  const DARK = [33, 33, 36];
-  const LIGHT = [243, 243, 243];
+  const DARK = [41, 37, 33];
+  const LIGHT = [243, 237, 228];
   const intro = $('intro');
   const stage = $('introStage');
   const rig = $('rig');
@@ -183,10 +183,10 @@
   const sceneStage = $('sceneStage');
   const sceneSun = $('sceneSun');
   const sceneText = $('sceneText');
-  const SUN_HIGH = [255, 205, 40];
-  const SUN_LOW = [240, 112, 20];
-  const SCENE_DARK = [33, 33, 36];
-  const SCENE_LIGHT = [243, 243, 243];
+  const SUN_HIGH = [251, 132, 36];
+  const SUN_LOW = [169, 75, 11];
+  const SCENE_DARK = [41, 37, 33];
+  const SCENE_LIGHT = [243, 237, 228];
   const mixRgb = (a, b, t) => a.map((v, i) => Math.round(lerp(v, b[i], t)));
 
   function paintScene() {
@@ -271,8 +271,8 @@
   const howSteps = [...$('howSteps').children].map((el) => ({ el, text: el.querySelector('p'), badge: el.querySelector('.num') }));
   const lensWords = [...$('lens').children];
   const LENS = [[.97, .08], [.03, .92], [.97, .9], [.03, .1]];
-  const GREY = [243, 243, 243];
-  const BADGE = [33, 33, 36];
+  const GREY = [243, 237, 228];
+  const BADGE = [41, 37, 33];
 
   function paintHow() {
     const wide = wideScreen.matches;
@@ -287,7 +287,7 @@
       text.style.opacity = wide ? lerp(.45, 1, on).toFixed(3) : '';
       const lit = wide ? fade(pos, i - .5, i - .1) : 1;
       badge.style.background = `rgb(${GREY.map((v, n) => Math.round(lerp(v, BADGE[n], lit))).join(',')})`;
-      badge.style.color = lit > .5 ? '#fff' : '#8e8e94';
+      badge.style.color = lit > .5 ? '#fff' : '#8f857b';
       el.style.opacity = wide ? (i < pos - .6 ? lerp(1, .35, fade(pos - i, .6, 1)).toFixed(3) : 1) : '';
     });
 
@@ -365,12 +365,12 @@
   // ---------- Closing wall ----------
 
   const TILES = [
-    ['Approvals', 'Purchase request approved'],
-    ['Orders', '#1042 assigned to Sales'],
-    ['Reports', 'Monthly report is ready'],
-    ['Invoices', 'Invoice #1040 sent'],
-    ['Delivery', 'Order #1039 delivered'],
-    ['Requests', 'New enquiry from the website'],
+    ['Transcribe', 'Transcript added.'],
+    ['Remove dead air', 'Removed in 48 places'],
+    ['Fix mistakes', '10 cuts selected'],
+    ['Captions', 'Adding captions'],
+    ['Motion graphics', 'Claude finished building your video.'],
+    ['Finish & download', 'Saving final'],
   ];
 
   function fillWall() {
@@ -392,48 +392,43 @@
     });
   }
 
-  // ---------- Sample screen: jobs moving through the flow ----------
+  // ---------- Sample screen: a Foxdusk Studio project moving through its steps ----------
 
-  const STAGES = ['Request', 'Approval', 'Invoice', 'Delivered'];
-  const JOBS = [
-    { id: '#1042', owner: 'Aisha · Sales', stage: 0 },
-    { id: '#1041', owner: 'Daniel · Finance', stage: 1 },
-    { id: '#1040', owner: 'Mei · Operations', stage: 2 },
-    { id: '#1039', owner: 'Ravi · Delivery', stage: 3 },
+  const STEPS = [
+    { id: '2', title: 'Transcribe', sub: 'Words with timings' },
+    { id: '3', title: 'Remove dead air', sub: 'Trim long pauses' },
+    { id: '4', title: 'Fix mistakes', sub: 'Remove stutters and mistakes' },
+    { id: '5', title: 'Captions', sub: 'Words on screen' },
   ];
-  let delivered = 18;
+  let doneSteps = 2;
 
   function paintScreen() {
-    $('screenRows').replaceChildren(...JOBS.map((job) => {
+    $('screenRows').replaceChildren(...STEPS.map((step, i) => {
       const li = document.createElement('li');
       const status = document.createElement('span');
       status.className = 'status';
-      status.textContent = STAGES[job.stage];
-      if (job.stage === 3) status.dataset.done = '';
+      // Like Studio's step list: a finished step shows a tick instead of its number.
+      status.textContent = step.sub;
+      if (i < doneSteps) status.dataset.done = '';
       const id = document.createElement('span');
       id.className = 'id';
-      id.textContent = job.id;
+      id.textContent = i < doneSteps ? '✓' : step.id;
       const owner = document.createElement('span');
       owner.className = 'owner';
-      owner.textContent = job.owner;
+      owner.textContent = step.title;
       li.append(id, owner, status);
       return li;
     }));
-    $('statOpen').textContent = JOBS.filter((job) => job.stage < 3).length;
-    $('statWaiting').textContent = JOBS.filter((job) => job.stage === 1).length;
-    $('statDone').textContent = delivered;
+    // The numbers Remove dead air shows after trimming.
+    $('statOpen').textContent = '14:32';
+    $('statWaiting').textContent = '12:08';
+    $('statDone').textContent = '2:24';
   }
 
   paintScreen();
   if (!reducedMotion) {
     setInterval(() => {
-      const job = JOBS[Math.floor(Math.random() * JOBS.length)];
-      if (job.stage < 3) {
-        job.stage++;
-        if (job.stage === 3) delivered++;
-      } else {
-        job.stage = 0;
-      }
+      doneSteps = (doneSteps + 1) % (STEPS.length + 1);
       paintScreen();
     }, 2200);
   }
@@ -443,29 +438,29 @@
   // Each problem has its own stages, typical numbers and starting assumption. `stuck` is the slow stage.
   const PROBLEMS = [
     {
-      label: 'Orders arrive through chats and calls',
-      now: ['Chat', 'Copy to sheet', 'Ask if done', 'Recheck'], system: ['Order form', 'One queue', 'Assigned', 'Done'],
-      stuck: 1, jobs: 120, people: 4, minutes: 20, save: 50,
+      label: 'Cutting dead air by hand',
+      now: ['Scrub', 'Find pauses', 'Cut', 'Recheck'], system: ['Transcript', 'Auto cut', 'Review', 'Done'],
+      stuck: 1, jobs: 5, people: 1, minutes: 45, save: 70,
     },
     {
-      label: 'Approvals get stuck waiting on people',
-      now: ['Request', 'Buried in chat', 'Follow up', 'Approved'], system: ['Request', 'Right person', 'Reminder', 'Approved'],
-      stuck: 1, jobs: 60, people: 3, minutes: 35, save: 60,
+      label: 'Finding retakes and stutters',
+      now: ['Watch it all', 'Spot retakes', 'Cut', 'Rewatch'], system: ['Transcript', 'Flagged', 'Approve', 'Done'],
+      stuck: 1, jobs: 4, people: 1, minutes: 60, save: 60,
     },
     {
-      label: 'Reports get rebuilt by hand',
-      now: ['Export', 'Paste', 'Fix mismatch', 'Send'], system: ['Data in', 'Combined', 'Checked', 'Ready'],
-      stuck: 2, jobs: 30, people: 2, minutes: 45, save: 70,
+      label: 'Typing captions by hand',
+      now: ['Listen', 'Type', 'Sync', 'Fix typos'], system: ['Transcript', 'Captions', 'Brand style', 'Burned in'],
+      stuck: 2, jobs: 6, people: 1, minutes: 40, save: 75,
     },
     {
-      label: 'The same data gets typed in twice',
-      now: ['Type once', 'Retype', 'Find typos', 'Fix'], system: ['Enter once', 'Shared', 'Validated', 'Done'],
-      stuck: 1, jobs: 150, people: 5, minutes: 18, save: 65,
+      label: 'Making titles and graphics',
+      now: ['Open app', 'Design', 'Keyframe', 'Export'], system: ['Prompt', 'Claude builds', 'Preview', 'Render'],
+      stuck: 2, jobs: 3, people: 1, minutes: 90, save: 55,
     },
     {
-      label: 'Nobody knows where a job stands',
-      now: ['Customer asks', 'Ask around', 'Check board', 'Best guess'], system: ['Customer asks', 'Live status', 'Same screen', 'Answered'],
-      stuck: 1, jobs: 90, people: 4, minutes: 25, save: 45,
+      label: 'Waiting on an editor',
+      now: ['Send file', 'Wait', 'Feedback', 'Wait again'], system: ['Record', 'Edit yourself', 'Review', 'Post'],
+      stuck: 1, jobs: 4, people: 1, minutes: 120, save: 50,
     },
   ];
   const DAY_START = 9;
@@ -584,7 +579,7 @@
     $('simSun').style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
     $('simDusk').style.left = `${toX(DUSK).toFixed(1)}px`;
     const night = fade(clock, 16.5, 19);
-    sky.style.background = `rgb(${[47, 47, 51].map((v, i) => Math.round(lerp(v, [13, 13, 16][i], night))).join(',')})`;
+    sky.style.background = `rgb(${[58, 52, 46].map((v, i) => Math.round(lerp(v, [31, 27, 24][i], night))).join(',')})`;
     $('simClock').textContent = clockText(clock);
   }
 
@@ -609,9 +604,9 @@
       lines.append(`This one job takes your team until ${clockText(finishNow)}. `);
     }
     if (finishSystem >= DUSK) {
-      lines.append('Even with a system it is too much for one day, so this one needs more than software.');
+      lines.append('Even with Foxdusk AIOS it is too much for one day, so this one needs more than software.');
     } else {
-      lines.append('With a system: ', em(`${clockText(finishSystem)}, ${durationText(DUSK - finishSystem)} before dusk.`));
+      lines.append('With Foxdusk AIOS: ', em(`${clockText(finishSystem)}, ${durationText(DUSK - finishSystem)} before dusk.`));
     }
     verdict.replaceChildren(lines);
   }
@@ -688,13 +683,8 @@
     $('saveOut').textContent = `${Math.round(result.save * 100)}%`;
     $('simMini').textContent = result.finishNow >= DAY_LIMIT
       ? 'Today: runs into tomorrow'
-      : `Today: done at ${clockText(result.finishNow)}. With a system: ${clockText(result.finishSystem)}.`;
-    $('sendResult').href = contactHref(
-      `Hi Foxdusk, I ran the Workflow X-ray.\n\nProblem: ${problem.label}\n` +
-      `${result.jobs} jobs a day, ${result.people} people, ${result.minutes} minutes per job.\n` +
-      `Finish time today: ${result.finishNow >= DAY_LIMIT ? 'runs into tomorrow' : clockText(result.finishNow)}.\n` +
-      `Estimated ${Math.round(result.lostHoursMonth)} hours a month a system could give back.\n\nCan we talk about it?`,
-    );
+      : `Today: done at ${clockText(result.finishNow)}. With Foxdusk AIOS: ${clockText(result.finishSystem)}.`;
+    void problem; // The result button now goes to the order form.
   }
 
   function loadProblem() {

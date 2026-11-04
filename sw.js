@@ -1,5 +1,5 @@
 // Keeps public site files for offline use. The network always wins, so new versions arrive on their own.
-const CACHE = 'site-v1';
+const CACHE = 'site-v2';
 const FILES = [
   '/',
   'index.html',
@@ -11,6 +11,9 @@ const FILES = [
   'projects.js',
   'projects.json',
   'icons/icon-192.png',
+  'aios.js',
+  'brand/foxdusk-logomark-orange.png',
+  'brand/foxdusk-wordmark-white.png',
 ];
 
 self.addEventListener('install', (event) => {
@@ -32,7 +35,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  if (request.method !== 'GET' || new URL(request.url).origin !== location.origin) return;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== location.origin) return;
+  // Never keep API replies or the admin page: they can hold private order data.
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/admin')) return;
 
   event.respondWith(
     fetch(request)

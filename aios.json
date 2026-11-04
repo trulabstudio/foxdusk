@@ -1,0 +1,13 @@
+{
+  "product": "Foxdusk AIOS",
+  "version": "2.1.0",
+  "price_rm": 299,
+  "bank": {
+    "name": "Maybank",
+    "account_name": "TRULAB STUDIO",
+    "account_no": "5147 6742 0283"
+  },
+  "duitnow_qr": "",
+  "max_devices": 2,
+  "turnstile_site_key": ""
+}

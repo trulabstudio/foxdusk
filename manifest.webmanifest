@@ -1,16 +1,29 @@
 {
-  "name": "Foxdusk",
-  "short_name": "Foxdusk",
-  "description": "Websites, online stores and business systems for SMEs and corporates.",
+  "name": "Foxdusk AIOS",
+  "short_name": "Foxdusk AIOS",
+  "description": "Finish the edit before dusk. The video-editing kit for your own computer.",
   "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#212124",
-  "theme_color": "#212124",
+  "background_color": "#292521",
+  "theme_color": "#292521",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

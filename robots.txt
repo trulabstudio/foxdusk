@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+# /admin is kept out of search by its noindex tag and header, which crawlers must be allowed to read.
+Disallow: /api/
 
 Sitemap: https://www.foxdusk.com/sitemap.xml

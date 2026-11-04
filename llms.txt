@@ -1,0 +1,39 @@
+# Foxdusk AIOS
+
+> Foxdusk AIOS is a video-editing kit that runs on your own computer (Mac or Windows). It turns a raw talking-head recording into a finished video: free on-device transcription, automatic removal of silences and retakes, branded burned-in captions, and motion graphics built with Claude Code or OpenAI Codex. One-time payment, no subscription. Made in Malaysia by Foxdusk, a division of Trulab Production Sdn. Bhd.
+
+## What it does
+
+- Foxdusk Studio: a step-by-step app in the browser, in English or Bahasa Melayu. No coding needed for the basic edit.
+- Transcription: free and word by word, made on the user's computer. ElevenLabs is optional.
+- Remove dead air: shortens long silent pauses to a natural breath.
+- Fix mistakes: finds stutters, false starts and retakes; the user approves each cut.
+- Captions: burned into the video in the user's own brand font and colour.
+- Motion graphics: titles, callouts and B-roll timed to the words, with Claude Code or OpenAI Codex (14 editing skills, two scene templates, 406 draft cards).
+- Also: Reels and YouTube Shorts (9:16), 10–30 second brand showreels, and promo videos made from a website link.
+
+## Who it is for
+
+Creators, coaches, educators, podcasters and small marketing teams who record themselves talking and want a finished, branded video without editing every cut by hand.
+
+## Price and licence
+
+- One-time price, shown on https://www.foxdusk.com/ (currently RM 299, paid in Malaysian ringgit).
+- Payment by bank transfer or DuitNow; card and FPX through Stripe when enabled.
+- One licence key works on 2 computers. Videos made with it belong to the buyer, including for client work.
+- No monthly fee to Foxdusk. Services the buyer chooses to connect (Claude, OpenAI, ElevenLabs) are billed by those providers.
+
+## Requirements
+
+- A Mac or a Windows PC with at least 5 GB free.
+- An internet connection (licence check, setup, and Claude Code or Codex work online).
+- For motion graphics: a Claude plan or Anthropic API credits for Claude Code, or OpenAI Codex. Transcription, cuts, captions and downloading the video work without either.
+- Footage stays on the user's computer unless they choose a cloud service such as ElevenLabs.
+
+## Links
+
+- Product and purchase: https://www.foxdusk.com/
+- Frequently asked questions: https://www.foxdusk.com/#faq
+- Licence and purchase terms: https://www.foxdusk.com/aios-terms.html
+- Privacy policy: https://www.foxdusk.com/privacy.html
+- Contact: admin@foxdusk.com

@@ -1,2 +1,9 @@
 server.js
 README.md
+.secrets/
+supabase/
+.env
+.env.*
+SETUP-AIOS.md
+test/
+tools/
