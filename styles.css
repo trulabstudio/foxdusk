@@ -442,6 +442,8 @@ h2 {
   opacity: 0;
   transform: translateY(-50%);
   will-change: opacity;
+  /* Text only, and invisible at the start: never let it block clicks on the hero buttons beneath. */
+  pointer-events: none;
 }
 
 .block-right { right: 6vw; }
@@ -566,9 +568,13 @@ h2 {
 .price-foot p { flex: 1 1 280px; color: var(--soft); font-size: clamp(.9375rem, 2.2vh, 1.25rem); line-height: 1.25; letter-spacing: -.04em; }
 
 /* Foxdusk AIOS order: payment details and the receipt form, built like the price cards */
-.order { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 8px; margin-top: 8px; align-items: start; scroll-margin-top: calc(var(--bar) + 16px); }
+.order { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 8px; margin-top: 8px; align-items: stretch; scroll-margin-top: calc(var(--bar) + 16px); }
 .order h3 { padding-bottom: 14px; border-bottom: 1px solid var(--line-d); font-size: 1.25rem; letter-spacing: -.04em; line-height: 1.2; }
-.order-pay { padding: 20px; border-radius: 20px; background: var(--dark-2); }
+.order-pay { display: flex; flex-direction: column; padding: 20px; border-radius: 20px; background: var(--dark-2); }
+/* Same height as the form beside it; the reference note sits at the bottom. */
+.order-pay > div:not([hidden]) { display: flex; flex: 1; flex-direction: column; }
+.order-pay .order-note { margin-top: auto; }
+.order-pay dl + div[data-qr-wrap], .order-pay dl { margin-bottom: 18px; }
 .order-pay dl { display: grid; gap: 4px; margin-top: 14px; }
 .order-pay dt { margin-top: 10px; color: var(--soft); font-size: .75rem; }
 .order-pay dd { margin: 0; font-size: 1rem; word-break: break-word; }

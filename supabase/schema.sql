@@ -99,3 +99,10 @@ alter table public.orders alter column receipt_path drop not null;
 alter table public.orders drop constraint if exists orders_status_check;
 alter table public.orders add constraint orders_status_check
   check (status in ('pending', 'approved', 'rejected', 'awaiting_payment', 'expired'));
+
+-- Contact details shown on the website (admin > Settings > Contact). Safe to run again.
+alter table public.settings add column if not exists whatsapp text;
+alter table public.settings add column if not exists contact_email text;
+alter table public.settings add column if not exists whatsapp_message text;
+update public.settings set whatsapp = coalesce(whatsapp, '60176982032'), contact_email = coalesce(contact_email, 'admin@foxdusk.com'),
+  whatsapp_message = coalesce(whatsapp_message, 'Hi Foxdusk, I have a question about Foxdusk AIOS:') where id = 1;

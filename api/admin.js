@@ -90,6 +90,14 @@ async function stats(periodParam) {
 }
 
 // ---------- shop settings ----------
+// "017-698 2032" or "+60 17 698 2032" -> "60176982032" (country code, digits only)
+function whatsappNumber(v) {
+  let d = String(v ?? '').replace(/\D/g, '');
+  if (!d) return '';
+  if (d.startsWith('0')) d = `60${d.slice(1)}`;
+  if (d.length < 9 || d.length > 15) throw S.httpError(400, 'Enter a WhatsApp number like 012 345 6789 or +60 12 345 6789.');
+  return d;
+}
 const text = (v, n) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
 async function saveSettings(body, admin) {
   const price = Math.round(Number(body.price_rm) * 100) / 100;
@@ -103,11 +111,15 @@ async function saveSettings(body, admin) {
     account_name: text(body.account_name, 120),
     account_no: text(body.account_no, 40),
     duitnow_qr: text(body.duitnow_qr, 300),
+    whatsapp: whatsappNumber(body.whatsapp),
+    contact_email: text(body.contact_email, 254).toLowerCase(),
+    whatsapp_message: String(body.whatsapp_message ?? '').replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, ' ').trim().slice(0, 300),
     updated_at: new Date().toISOString(),
     updated_by: admin,
   };
   if (row.sales_open && !(price > 0)) throw S.httpError(400, 'Set a price above RM 0 before opening sales.');
   if (row.sales_open && (!row.bank_name || !row.account_name || !row.account_no)) throw S.httpError(400, 'Fill in the bank name, account name and account number before opening sales.');
+  if (row.contact_email && !S.EMAIL_RE.test(row.contact_email)) throw S.httpError(400, 'Enter a valid contact email, or leave it empty.');
   if (row.stripe_enabled && !Stripe.ready()) throw S.httpError(400, 'Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Vercel first, then switch on card payment.');
   if (row.duitnow_qr && !/^(https:\/\/|\/?[\w./-]+\.(png|jpe?g|webp|svg)$)/i.test(row.duitnow_qr)) throw S.httpError(400, 'The DuitNow QR must be an https:// link or an image path like icons/duitnow-qr.png.');
   try {
@@ -134,12 +146,12 @@ module.exports = S.handler(async (req, res) => {
       const filter = ['pending', 'approved', 'rejected'].includes(status) ? `&status=eq.${status}` : '';
       const search = String(q.get('q') || '').trim().slice(0, 80).replace(/[,()*]/g, ' ');
       const or = search ? `&or=(name.ilike.*${encodeURIComponent(search)}*,email.ilike.*${encodeURIComponent(search)}*,order_no.ilike.*${encodeURIComponent(search)}*)` : '';
-      const orders = await S.db(`orders?select=*,licenses(key,status,max_devices,activations(device_name,app_version,first_seen,last_seen))${filter}${or}&order=created_at.desc&limit=200`);
-      const counts = {};
-      for (const s of ['pending', 'approved', 'rejected']) {
-        const rows = await S.db(`orders?select=id&status=eq.${s}&limit=1000`);
-        counts[s] = rows.length;
-      }
+      const [orders, all] = await Promise.all([
+        S.db(`orders?select=*,licenses(key,status,max_devices,activations(device_name,app_version,first_seen,last_seen))${filter}${or}&order=created_at.desc&limit=200`),
+        S.db('orders?select=status&limit=10000'),
+      ]);
+      const counts = { pending: 0, approved: 0, rejected: 0 };
+      for (const o of all) if (o.status in counts) counts[o.status] += 1;
       return S.send(res, 200, { orders, counts, admin });
     }
     if (action === 'stats') return S.send(res, 200, await stats(q.get('period')));

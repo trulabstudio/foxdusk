@@ -21,12 +21,17 @@ module.exports = S.handler(async (req, res) => {
   // and the Turnstile site key (public by design).
   if (req.method === 'GET') {
     const s = await S.getSettings();
+    // Vercel's servers keep this for a minute, so visitors rarely wait for the database.
+    res.setHeader('Vercel-CDN-Cache-Control', 'max-age=60, stale-while-revalidate=300');
     return S.send(res, 200, {
       open: s.sales_open && s.price_rm > 0,
       price_rm: s.price_rm,
       bank: { name: s.bank_name, account_name: s.account_name, account_no: s.account_no },
       duitnow_qr: s.duitnow_qr,
       card: !!(s.stripe_enabled && Stripe.ready()),
+      whatsapp: s.whatsapp,
+      contact_email: s.contact_email,
+      whatsapp_message: s.whatsapp_message,
       turnstile_site_key: S.env('TURNSTILE_SITE_KEY', { optional: true }) || null,
     });
   }

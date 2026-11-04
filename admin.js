@@ -328,7 +328,7 @@ async function renderSettings() {
   const s = await api({ action: 'settings' });
   state.settings = s;
   view().innerHTML = `<div class="page">
-    <header class="page-head"><div><span class="label">Settings</span><h1>Price and payment</h1><p class="lede">Changes show on foxdusk.com as soon as you save. No redeploy needed.</p></div></header>
+    <header class="page-head"><div><span class="label">Settings</span><h1>Price and payment</h1><p class="lede">Changes show on foxdusk.com within a minute of saving. No redeploy needed.</p></div></header>
     ${s.source !== 'supabase' ? '<p class="msg info" style="margin:0 0 16px">These values come from aios.json because the settings table is missing. Run the latest <b>supabase/schema.sql</b> in the Supabase SQL Editor, then save here.</p>' : ''}
     <div class="settings-grid">
       <form id="settingsForm" novalidate>
@@ -347,6 +347,11 @@ async function renderSettings() {
           <div class="field"><label for="sNo">Account number</label><input class="input" id="sNo" maxlength="40" inputmode="numeric" value="${esc(s.account_no)}"></div>
           <div class="field"><label for="sQr">DuitNow QR image <span class="muted">(optional)</span></label><input class="input" id="sQr" maxlength="300" value="${esc(s.duitnow_qr)}" placeholder="icons/duitnow-qr.png or https://…"><span class="hint">Shown under the account number when filled.</span></div>
         </section>
+        <section class="card"><div class="card-head"><h2>Contact</h2></div>
+          <div class="field"><label for="sWa">WhatsApp number</label><input class="input" id="sWa" type="tel" inputmode="tel" maxlength="20" value="${esc(s.whatsapp || '')}" placeholder="012 345 6789"><span class="hint">Used by every WhatsApp button on the website. Leave empty to show email instead.</span></div>
+          <div class="field"><label for="sWaMsg">WhatsApp opening message</label><textarea class="input textarea" id="sWaMsg" maxlength="300" rows="2">${esc(s.whatsapp_message || '')}</textarea><span class="hint">Already typed for the buyer when they tap a WhatsApp button. <a class="link-btn" id="waTry" href="#" target="_blank" rel="noopener">Try it ↗</a></span></div>
+          <div class="field"><label for="sMail">Contact email</label><input class="input" id="sMail" type="email" maxlength="254" value="${esc(s.contact_email || '')}" placeholder="admin@foxdusk.com"><span class="hint">Shown at the bottom of the website.</span></div>
+        </section>
         <div class="save-bar"><small>${s.updated_at ? `Last saved ${esc(when(s.updated_at))}${s.updated_by ? ` by ${esc(s.updated_by)}` : ''}` : 'Not saved yet'}</small><button class="btn btn-primary" type="submit" id="sSave">Save changes</button></div>
       </form>
       <aside class="preview" aria-label="What buyers see">
@@ -364,17 +369,20 @@ async function renderSettings() {
     $('#pNo').textContent = $('#sNo').value || '–';
     $('#pState').textContent = open && price > 0 ? 'Buy form is open' : 'Buy form shows "Sales open soon"';
     $('#pCard').textContent = $('#sStripe').checked ? 'Card / FPX: on' : 'Card / FPX: off';
+    let wa = $('#sWa').value.replace(/\D/g, ''); if (wa.startsWith('0')) wa = `60${wa.slice(1)}`;
+    $('#waTry').href = wa ? `https://wa.me/${wa}?text=${encodeURIComponent($('#sWaMsg').value)}` : '#';
+    $('#waTry').hidden = !wa;
   };
   $('#settingsForm').addEventListener('input', preview); preview();
   $('#settingsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const price = Number($('#sPrice').value);
-    if (state.settings.price_rm !== price && !(await ask(`Change the price to ${rm(price)}?`, `foxdusk.com will show ${rm(price)} right away. Orders already placed keep their price.`, 'Change price'))) return;
+    if (state.settings.price_rm !== price && !(await ask(`Change the price to ${rm(price)}?`, `foxdusk.com will show ${rm(price)} within a minute. Orders already placed keep their price.`, 'Change price'))) return;
     const btn = $('#sSave'); btn.disabled = true;
     try {
-      const r = await api(null, { action: 'save_settings', sales_open: $('#sOpen').checked, stripe_enabled: $('#sStripe').checked, price_rm: price, bank_name: $('#sBank').value, account_name: $('#sName').value, account_no: $('#sNo').value, duitnow_qr: $('#sQr').value });
+      const r = await api(null, { action: 'save_settings', sales_open: $('#sOpen').checked, stripe_enabled: $('#sStripe').checked, price_rm: price, bank_name: $('#sBank').value, account_name: $('#sName').value, account_no: $('#sNo').value, duitnow_qr: $('#sQr').value, whatsapp: $('#sWa').value, contact_email: $('#sMail').value, whatsapp_message: $('#sWaMsg').value });
       state.settings = r.settings;
-      toast('Saved. foxdusk.com now shows these details.');
+      toast('Saved. foxdusk.com shows these details within a minute.');
       await renderSettings();
     } catch (err) { toast(err.message, true); btn.disabled = false; }
   });

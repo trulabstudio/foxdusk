@@ -36,6 +36,19 @@
       if (!open) { $('#submit').disabled = true; $('#submit').textContent = 'Sales open soon'; }
       // The site key comes from TURNSTILE_SITE_KEY in Vercel (or aios.json).
       if (open && c.turnstile_site_key) startTurnstile(c.turnstile_site_key);
+      // WhatsApp number and contact email from admin > Settings > Contact.
+      if ('whatsapp' in c) {
+        const href = c.whatsapp
+          ? `https://wa.me/${c.whatsapp}?text=${encodeURIComponent(c.whatsapp_message || 'Hi Foxdusk, I have a question about Foxdusk AIOS:')}`
+          : `mailto:${c.contact_email || 'admin@foxdusk.com'}`;
+        document.querySelectorAll('#whatsappLink, #waFloat, a[href^="https://wa.me/"]').forEach((a) => { a.href = href; });
+        const label = document.querySelector('#whatsappLink .btn-label');
+        if (label) label.textContent = c.whatsapp ? 'Message us on WhatsApp' : 'Email us';
+      }
+      if (c.contact_email) {
+        const mail = $('#emailLink');
+        if (mail) { mail.textContent = c.contact_email; mail.href = `mailto:${c.contact_email}`; }
+      }
       // Card / FPX through Stripe, when switched on in admin > Settings.
       if (open && c.card) { $('#payMethod').hidden = false; setMethod('card'); }
       // Keep the price search engines read in step with admin > Settings.
