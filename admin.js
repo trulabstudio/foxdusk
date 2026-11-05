@@ -1,5 +1,5 @@
 // Built by Foxdusk
-// Foxdusk AIOS admin: dashboard, orders and shop settings. Sign-in is Supabase Auth.
+// Foxdusk admin (Foxdusk AIOS and Hookdusk AIOS): dashboard, orders and shop settings. Sign-in is Supabase Auth.
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 
 const $ = (s, el = document) => el.querySelector(s);
@@ -15,6 +15,10 @@ const ago = (iso) => {
   const d = Math.round(h / 24); return d < 30 ? `${d} d ago` : new Date(iso).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' });
 };
 const STATUS = { pending: 'To review', approved: 'Paid', rejected: 'Rejected', awaiting_payment: 'Awaiting card payment', expired: 'Card payment not completed' };
+const PRODUCT = { foxdusk: 'Foxdusk AIOS', hookdusk: 'Hookdusk AIOS', bundle: 'Bundle: Foxdusk + Hookdusk', upgrade_hookdusk: 'Upgrade: add Hookdusk to a key', upgrade_foxdusk: 'Upgrade: add Foxdusk to a key' };
+const PRODUCT_SHORT = { foxdusk: 'Foxdusk', hookdusk: 'Hookdusk', bundle: 'Bundle', upgrade_hookdusk: '+ Hookdusk', upgrade_foxdusk: '+ Foxdusk' };
+const APP = { foxdusk: 'Foxdusk AIOS', hookdusk: 'Hookdusk AIOS' };
+const productOf = (o) => (PRODUCT[o?.product] ? o.product : 'foxdusk');
 const METHOD = { bank_transfer: 'Bank transfer', stripe: 'Card / FPX (Stripe)' };
 const pill = (status, label) => `<span class="pill ${esc(status)}">${esc(label || STATUS[status] || status)}</span>`;
 
@@ -71,7 +75,7 @@ async function route() {
 const PERIOD_NAME = { '7d': 'last 7 days', '30d': 'last 30 days', '90d': 'last 90 days', all: 'all time' };
 const periodSeg = (current) => `<div class="seg" role="group" aria-label="Period">${[['7d', '7 days'], ['30d', '30 days'], ['90d', '90 days'], ['all', 'All time']].map(([k, l]) => `<button type="button" data-period="${k}" aria-pressed="${k === current}">${l}</button>`).join('')}</div>`;
 const kpi = (label, value, note, extra = '') => `<div class="kpi${extra}"><span class="kpi-label">${label}</span><b class="kpi-value">${value}</b><span class="kpi-note">${note}</span></div>`;
-const orderLine = (o) => `<li><button type="button" class="line" data-open="${esc(o.id)}"><span class="line-main"><b>${esc(o.name)}</b><small class="mono">${esc(o.order_no)} · ${esc(ago(o.created_at))}</small></span><span class="line-amount">${o.amount_rm ? esc(rm(o.amount_rm, 0)) : 'Free'}</span><span class="btn btn-primary btn-sm">Review</span></button></li>`;
+const orderLine = (o) => `<li><button type="button" class="line" data-open="${esc(o.id)}"><span class="line-main"><b>${esc(o.name)}</b><small class="mono">${esc(o.order_no)} · ${esc(PRODUCT_SHORT[productOf(o)])} · ${esc(ago(o.created_at))}</small></span><span class="line-amount">${o.amount_rm ? esc(rm(o.amount_rm, 0)) : 'Free'}</span><span class="btn btn-primary btn-sm">Review</span></button></li>`;
 
 async function renderDashboard() {
   view().innerHTML = '<div class="page"><p class="muted">Loading…</p></div>';
@@ -102,6 +106,11 @@ async function renderDashboard() {
         <div class="card-head"><h2>To review</h2><a class="link-btn" href="#orders">All orders</a></div>
         ${(s.to_review || []).length ? `<ul class="lines">${s.to_review.map(orderLine).join('')}</ul>` : '<div class="empty-small"><b>All caught up</b><span>New orders appear here.</span></div>'}
       </section>
+    </div>
+
+    <h2 class="section-title">Sales by product <span class="muted" style="font-weight:400;font-size:14px">${p}</span></h2>
+    <div class="grid-3">
+      ${Object.entries(s.by_product || {}).map(([k, v]) => kpi(esc(PRODUCT[k] || v.name), esc(rm(v.revenue, 0)), `${v.orders} paid order${v.orders === 1 ? '' : 's'}`)).join('')}
     </div>
 
     <h2 class="section-title">Licences</h2>
@@ -222,7 +231,7 @@ function paintTable() {
     const status = free ? pill('free', 'Free licence') : lic && lic.status === 'revoked' ? pill('revoked', 'Key cancelled') : pill(o.status);
     return `<button class="orow" type="button" data-open="${esc(o.id)}">
       <span class="o-who"><b>${esc(o.name)}</b><small>${esc(o.email)}</small></span>
-      <span class="o-meta"><b class="mono">${esc(o.order_no)}</b><small>${esc(when(o.created_at))}</small></span>
+      <span class="o-meta"><b class="mono">${esc(o.order_no)}</b><small>${esc(PRODUCT_SHORT[productOf(o)])} · ${esc(when(o.created_at))}</small></span>
       <span class="o-amount r">${free ? 'Free' : esc(rm(o.amount_rm))}</span>
       <span class="o-status">${status}</span>
       <span class="o-act">${o.status === 'pending' ? '<span class="btn btn-primary btn-sm">Review</span>' : '<span class="chev" aria-hidden="true">›</span>'}</span>
@@ -252,6 +261,8 @@ async function openOrder(id) {
       <button class="close-btn" type="button" data-close-drawer aria-label="Close">×</button></header>
     <div class="drawer-body">
       <section><h3>Payment</h3><div class="box"><dl class="kv">
+        <dt>Product</dt><dd><b>${esc(PRODUCT[productOf(o)])}</b></dd>
+        ${o.upgrade_key ? `<dt>Adds to key</dt><dd><span class="mono">${esc(o.upgrade_key)}</span></dd>` : ''}
         <dt>Amount</dt><dd><b>${free ? 'Free (no payment)' : esc(rm(o.amount_rm))}</b></dd>
         ${free ? '' : `<dt>Paid by</dt><dd>${esc(METHOD[o.payment_method] || 'Bank transfer')}${o.stripe_payment_intent ? `<br><a class="mono" href="https://dashboard.stripe.com/payments/${esc(o.stripe_payment_intent)}" target="_blank" rel="noopener">${esc(o.stripe_payment_intent)} ↗</a>` : ''}</dd>`}
         <dt>Email</dt><dd><a href="mailto:${esc(o.email)}">${esc(o.email)}</a></dd>
@@ -262,8 +273,8 @@ async function openOrder(id) {
       </dl></div></section>
       ${lic ? `<section><h3>Licence</h3>
         <div class="key-row"><span class="mono">${esc(lic.key)}</span><button class="btn btn-sm" type="button" data-copy="${esc(lic.key)}">Copy</button></div>
-        <div class="box" style="margin-top:12px"><dl class="kv"><dt>Status</dt><dd>${pill(lic.status, lic.status === 'active' ? 'Active' : 'Cancelled')}</dd><dt>Computers</dt><dd>${devices.length} of ${lic.max_devices}</dd></dl>
-          ${devices.length ? `<ul class="devices" style="margin-top:8px">${devices.map((d) => `<li><span>${esc(d.device_name || 'Computer')}<br><small>Foxdusk ${esc(d.app_version || '?')}</small></span><small>Last seen ${esc(ago(d.last_seen))}</small></li>`).join('')}</ul>` : '<p class="muted" style="margin-top:8px;font-size:14px">Not activated on any computer yet.</p>'}
+        <div class="box" style="margin-top:12px"><dl class="kv"><dt>Status</dt><dd>${pill(lic.status, lic.status === 'active' ? 'Active' : 'Cancelled')}</dd><dt>Unlocks</dt><dd>${esc((lic.products?.length ? lic.products : ['foxdusk']).map((a) => APP[a] || a).join(', '))}</dd><dt>Computers</dt><dd>${devices.length} of ${lic.max_devices}</dd></dl>
+          ${devices.length ? `<ul class="devices" style="margin-top:8px">${devices.map((d) => `<li><span>${esc(d.device_name || 'Computer')}<br><small>Last app version ${esc(d.app_version || '?')}</small></span><small>Last seen ${esc(ago(d.last_seen))}</small></li>`).join('')}</ul>` : '<p class="muted" style="margin-top:8px;font-size:14px">Not activated on any computer yet.</p>'}
         </div>
         <div class="actions-row">
           <button class="btn btn-ghost btn-sm" type="button" data-act="resend">Resend email</button>
@@ -293,8 +304,8 @@ function closeDrawer() { $('#drawerWrap').hidden = true; document.body.style.ove
 
 async function act(o, lic, action, btn) {
   const amount = rm(o.amount_rm);
-  if (action === 'approve' && !(await ask(`Confirm ${amount} from ${o.name}?`, `Check your bank account first. A licence key and the download link will be emailed to ${o.email}.`, 'Confirm & send key'))) return;
-  if (action === 'revoke' && !(await ask('Cancel this key?', 'Foxdusk Studio stops working on its computers the next time it checks (within a day when online), and the download link stops working.', 'Cancel key', true))) return;
+  if (action === 'approve' && !(await ask(`Confirm ${amount} from ${o.name}?`, `${PRODUCT[productOf(o)]}. Check your bank account first. ${o.upgrade_key ? `The app is added to key ${o.upgrade_key} and the download links are emailed to ${o.email}.` : `A licence key and the download link will be emailed to ${o.email}.`}`, 'Confirm & send key'))) return;
+  if (action === 'revoke' && !(await ask('Cancel this key?', 'The app stops working on its computers the next time it checks (within a day when online), and the download link stops working.', 'Cancel key', true))) return;
   if (action === 'reset_devices' && !(await ask('Reset computers?', 'Both computer slots are freed. The buyer can then activate on a new computer.', 'Reset computers'))) return;
   let extra = {};
   if (action === 'reject') {
@@ -314,10 +325,10 @@ async function act(o, lic, action, btn) {
 }
 
 async function issueFlow() {
-  $('#iname').value = ''; $('#iemail').value = '';
+  $('#iname').value = ''; $('#iemail').value = ''; $('#iproduct').value = 'foxdusk';
   if (!(await dialogResult('#issueDlg'))) return;
   try {
-    const r = await api(null, { action: 'issue', name: $('#iname').value, email: $('#iemail').value, notify: $('#inotify').checked });
+    const r = await api(null, { action: 'issue', name: $('#iname').value, email: $('#iemail').value, product: $('#iproduct').value, notify: $('#inotify').checked });
     await navigator.clipboard.writeText(r.key).catch(() => {});
     toast(`Licence created: ${r.key} (copied)${r.emailed ? ', emailed' : ''}.`);
     state.tab = 'approved'; await renderOrders();
@@ -351,8 +362,8 @@ async function renderSettings() {
         <section class="card">
           <div class="card-head"><h2>Sales</h2></div>
           <label class="switch"><span><b>Accept new orders</b><span>When off, the buy form shows "Sales open soon".</span></span><input type="checkbox" id="sOpen" ${s.sales_open ? 'checked' : ''}></label>
-          <div class="field"><label for="sPrice">Price</label><div class="input-prefix"><span>RM</span><input class="input" id="sPrice" type="number" inputmode="decimal" min="0" max="100000" step="1" value="${esc(s.price_rm)}"></div>
-            <span class="hint">One licence for 2 computers. Orders already placed keep their price.</span></div>
+          ${[['sPrice', 'Foxdusk AIOS', s.price_rm], ['sPriceHook', 'Hookdusk AIOS', s.price_hookdusk_rm], ['sPriceBundle', 'Bundle (Foxdusk + Hookdusk)', s.price_bundle_rm]].map(([id, label, v]) => `<div class="field"><label for="${id}">${label}</label><div class="input-prefix"><span>RM</span><input class="input" id="${id}" type="number" inputmode="decimal" min="0" max="100000" step="1" value="${esc(v ?? 0)}"></div></div>`).join('')}
+          <span class="hint">One licence for 2 computers. RM 0 hides that product from the buy form. Orders already placed keep their price.</span>
           <p class="buyer-sees" id="buyerSees"></p>
         </section>
 
@@ -403,8 +414,9 @@ async function renderSettings() {
     $('#qrRemove').hidden = !url;
   };
   const refresh = () => {
-    const open = $('#sOpen').checked; const price = Number($('#sPrice').value);
-    $('#buyerSees').innerHTML = `Buyers see <b>${open && price > 0 ? esc(rm(price)) : 'Sales open soon'}</b>${$('#sStripe').checked ? ' · card / FPX on' : ''}`;
+    const open = $('#sOpen').checked;
+    const list = [['Foxdusk', '#sPrice'], ['Hookdusk', '#sPriceHook'], ['Bundle', '#sPriceBundle']].filter(([, id]) => Number($(id).value) > 0).map(([n, id]) => `${n} ${rm(Number($(id).value), 0)}`);
+    $('#buyerSees').innerHTML = `Buyers see <b>${open && list.length ? esc(list.join(' · ')) : 'Sales open soon'}</b>${$('#sStripe').checked ? ' · card / FPX on' : ''}`;
     let wa = $('#sWa').value.replace(/\D/g, ''); if (wa.startsWith('0')) wa = `60${wa.slice(1)}`;
     $('#waTry').href = wa ? `https://wa.me/${wa}?text=${encodeURIComponent($('#sWaMsg').value)}` : '#';
     $('#waTry').hidden = !wa;
@@ -431,11 +443,12 @@ async function renderSettings() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const price = Number($('#sPrice').value);
-    if (state.settings.price_rm !== price && !(await ask(`Change the price to ${rm(price)}?`, `foxdusk.com will show ${rm(price)} within a minute. Orders already placed keep their price.`, 'Change price'))) return;
+    const price = Number($('#sPrice').value); const priceHook = Number($('#sPriceHook').value); const priceBundle = Number($('#sPriceBundle').value);
+    const changed = [['Foxdusk AIOS', state.settings.price_rm, price], ['Hookdusk AIOS', state.settings.price_hookdusk_rm, priceHook], ['Bundle', state.settings.price_bundle_rm, priceBundle]].filter(([, a, b]) => Number(a) !== b);
+    if (changed.length && !(await ask('Change the prices?', `${changed.map(([n, , b]) => `${n}: ${rm(b)}`).join(', ')}. foxdusk.com shows the new prices within a minute. Orders already placed keep their price.`, 'Change price'))) return;
     const btn = $('#sSave'); btn.disabled = true;
     try {
-      const r = await api(null, { action: 'save_settings', sales_open: $('#sOpen').checked, stripe_enabled: $('#sStripe').checked, price_rm: price, bank_name: $('#sBank').value, account_name: $('#sName').value, account_no: $('#sNo').value, duitnow_qr: $('#sQr').value, whatsapp: $('#sWa').value, contact_email: $('#sMail').value, whatsapp_message: $('#sWaMsg').value });
+      const r = await api(null, { action: 'save_settings', sales_open: $('#sOpen').checked, stripe_enabled: $('#sStripe').checked, price_rm: price, price_hookdusk_rm: priceHook, price_bundle_rm: priceBundle, bank_name: $('#sBank').value, account_name: $('#sName').value, account_no: $('#sNo').value, duitnow_qr: $('#sQr').value, whatsapp: $('#sWa').value, contact_email: $('#sMail').value, whatsapp_message: $('#sWaMsg').value });
       state.settings = r.settings;
       toast('Saved. foxdusk.com shows these details within a minute.');
       await renderSettings();

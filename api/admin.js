@@ -10,7 +10,7 @@
 // POST { action: "resend", id }             email the key and download link again
 // POST { action: "revoke" | "restore", key }
 // POST { action: "reset_devices", key }     free both computer slots
-// POST { action: "issue", name, email }     a free licence (you, testers, partners)
+// POST { action: "issue", name, email, product }  a free licence (you, testers, partners)
 'use strict';
 
 const S = require('../lib/shared');
@@ -41,7 +41,7 @@ async function stats(periodParam) {
   const period = Object.hasOwn(PERIODS, periodParam) ? periodParam : '30d';
   const days = PERIODS[period];
   const [orders, licenses] = await Promise.all([
-    S.db('orders?select=id,order_no,name,email,status,amount_rm,created_at,decided_at&order=created_at.desc&limit=10000'),
+    S.db('orders?select=id,order_no,name,email,status,product,amount_rm,created_at,decided_at&order=created_at.desc&limit=10000'),
     S.db('licenses?select=key,status,order_id,activations(id)&limit=10000'),
   ]);
   const today = dayOf(new Date().toISOString());
@@ -84,9 +84,13 @@ async function stats(periodParam) {
     active_licences: active.length,
     revoked_licences: licenses.filter((l) => l.status === 'revoked').length,
     computers: active.reduce((n, l) => n + (l.activations || []).length, 0),
+    by_product: Object.fromEntries(Object.keys(S.PRODUCTS).map((p) => {
+      const list = paidInPeriod.filter((o) => S.productOf(o) === p);
+      return [p, { name: S.PRODUCTS[p].name, orders: list.length, revenue: list.reduce((sum, o) => sum + Number(o.amount_rm), 0) }];
+    })),
     series: [...buckets].map(([date, v]) => ({ date, ...v })),
-    recent: orders.slice(0, 6).map((o) => ({ id: o.id, order_no: o.order_no, name: o.name, status: o.status, amount_rm: Number(o.amount_rm), created_at: o.created_at })),
-    to_review: orders.filter((o) => o.status === 'pending').slice(0, 5).map((o) => ({ id: o.id, order_no: o.order_no, name: o.name, status: o.status, amount_rm: Number(o.amount_rm), created_at: o.created_at })),
+    recent: orders.slice(0, 6).map((o) => ({ id: o.id, order_no: o.order_no, name: o.name, status: o.status, product: S.productOf(o), amount_rm: Number(o.amount_rm), created_at: o.created_at })),
+    to_review: orders.filter((o) => o.status === 'pending').slice(0, 5).map((o) => ({ id: o.id, order_no: o.order_no, name: o.name, status: o.status, product: S.productOf(o), amount_rm: Number(o.amount_rm), created_at: o.created_at })),
   };
 }
 
@@ -101,13 +105,21 @@ function whatsappNumber(v) {
 }
 const text = (v, n) => String(v ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, n);
 async function saveSettings(body, admin) {
-  const price = Math.round(Number(body.price_rm) * 100) / 100;
-  if (!Number.isFinite(price) || price < 0 || price > 100000) throw S.httpError(400, 'Enter a price between RM 0 and RM 100,000.');
+  const money = (v, label) => {
+    const n = Math.round(Number(v) * 100) / 100;
+    if (!Number.isFinite(n) || n < 0 || n > 100000) throw S.httpError(400, `Enter a ${label} price between RM 0 and RM 100,000.`);
+    return n;
+  };
+  const price = money(body.price_rm, 'Foxdusk AIOS');
+  const priceHook = money(body.price_hookdusk_rm ?? 0, 'Hookdusk AIOS');
+  const priceBundle = money(body.price_bundle_rm ?? 0, 'bundle');
   const row = {
     id: 1,
     sales_open: body.sales_open === true,
     stripe_enabled: body.stripe_enabled === true,
     price_rm: price,
+    price_hookdusk_rm: priceHook,
+    price_bundle_rm: priceBundle,
     bank_name: text(body.bank_name, 80),
     account_name: text(body.account_name, 120),
     account_no: text(body.account_no, 40),
@@ -118,7 +130,7 @@ async function saveSettings(body, admin) {
     updated_at: new Date().toISOString(),
     updated_by: admin,
   };
-  if (row.sales_open && !(price > 0)) throw S.httpError(400, 'Set a price above RM 0 before opening sales.');
+  if (row.sales_open && !(price > 0 || priceHook > 0 || priceBundle > 0)) throw S.httpError(400, 'Set at least one price above RM 0 before opening sales.');
   if (row.sales_open && (!row.bank_name || !row.account_name || !row.account_no)) throw S.httpError(400, 'Fill in the bank name, account name and account number before opening sales.');
   if (row.contact_email && !S.EMAIL_RE.test(row.contact_email)) throw S.httpError(400, 'Enter a valid contact email, or leave it empty.');
   if (row.stripe_enabled && !Stripe.ready()) throw S.httpError(400, 'Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Vercel first, then switch on card payment.');
@@ -148,7 +160,7 @@ module.exports = S.handler(async (req, res) => {
       const search = String(q.get('q') || '').trim().slice(0, 80).replace(/[,()*]/g, ' ');
       const or = search ? `&or=(name.ilike.*${encodeURIComponent(search)}*,email.ilike.*${encodeURIComponent(search)}*,order_no.ilike.*${encodeURIComponent(search)}*)` : '';
       const [orders, all] = await Promise.all([
-        S.db(`orders?select=*,licenses(key,status,max_devices,activations(device_name,app_version,first_seen,last_seen))${filter}${or}&order=created_at.desc&limit=200`),
+        S.db(`orders?select=*,licenses(key,status,max_devices,products,activations(device_name,app_version,first_seen,last_seen))${filter}${or}&order=created_at.desc&limit=200`),
         S.db('orders?select=status&limit=10000'),
       ]);
       const counts = { pending: 0, approved: 0, rejected: 0 };
@@ -229,9 +241,11 @@ module.exports = S.handler(async (req, res) => {
       const name = String(body.name || '').trim().slice(0, 120);
       const email = String(body.email || '').trim().toLowerCase().slice(0, 254);
       if (name.length < 2 || !S.EMAIL_RE.test(email)) throw S.httpError(400, 'Enter a name and a valid email.');
+      const product = S.pickProduct(body.product);
+      if (S.PRODUCTS[product].upgradeFrom) throw S.httpError(400, 'Choose Foxdusk AIOS, Hookdusk AIOS or the bundle.');
       const [o] = await S.db('orders', {
         method: 'POST', prefer: 'return=representation',
-        body: { order_no: S.newOrderNo(), name, email, phone: null, amount_rm: 0, status: 'approved', decided_at: now, decided_by: admin, note: 'Free licence issued by admin' },
+        body: { order_no: S.newOrderNo(), name, email, phone: null, product, amount_rm: 0, status: 'approved', decided_at: now, decided_by: admin, note: 'Free licence issued by admin' },
       });
       const lic = await createLicense(o);
       let emailed = false;

@@ -114,3 +114,38 @@ values ('site', 'site', true, 2097152, array['image/png', 'image/jpeg', 'image/w
 on conflict (id) do update set public = true,
   file_size_limit = excluded.file_size_limit,
   allowed_mime_types = excluded.allowed_mime_types;
+
+-- Hookdusk AIOS, a second product, sold alone or in a bundle with Foxdusk AIOS.
+-- Each order is for one product ("foxdusk", "hookdusk" or "bundle"); each
+-- licence lists the apps its key unlocks. Safe to run again.
+alter table public.orders add column if not exists product text not null default 'foxdusk';
+alter table public.orders drop constraint if exists orders_product_check;
+alter table public.orders add constraint orders_product_check check (product in ('foxdusk', 'hookdusk', 'bundle'));
+
+-- Licences sold before Hookdusk existed unlock both apps. This grant runs only
+-- the first time, when the column is created, so later Foxdusk-only keys stay Foxdusk-only.
+do $$
+begin
+  if not exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'licenses' and column_name = 'products') then
+    alter table public.licenses add column products text[] not null default '{foxdusk}';
+    update public.licenses set products = '{foxdusk,hookdusk}';
+  end if;
+end $$;
+alter table public.licenses drop constraint if exists licenses_products_check;
+alter table public.licenses add constraint licenses_products_check
+  check (cardinality(products) > 0 and products <@ array['foxdusk', 'hookdusk']::text[]);
+
+alter table public.settings add column if not exists price_hookdusk_rm numeric(10, 2) not null default 299 check (price_hookdusk_rm >= 0 and price_hookdusk_rm <= 100000);
+alter table public.settings add column if not exists price_bundle_rm numeric(10, 2) not null default 399 check (price_bundle_rm >= 0 and price_bundle_rm <= 100000);
+
+-- Upgrades: a buyer with one app adds the other to the SAME key. The order
+-- names the key in upgrade_key; once paid, the app is added to that licence.
+-- Price = bundle price minus the price of the app they already have. Safe to run again.
+alter table public.orders add column if not exists upgrade_key text;
+alter table public.orders drop constraint if exists orders_product_check;
+alter table public.orders add constraint orders_product_check
+  check (product in ('foxdusk', 'hookdusk', 'bundle', 'upgrade_hookdusk', 'upgrade_foxdusk'));
+alter table public.orders drop constraint if exists orders_upgrade_check;
+alter table public.orders add constraint orders_upgrade_check
+  check (product not in ('upgrade_hookdusk', 'upgrade_foxdusk') or upgrade_key is not null);
+create index if not exists orders_upgrade_key on public.orders (upgrade_key) where upgrade_key is not null;

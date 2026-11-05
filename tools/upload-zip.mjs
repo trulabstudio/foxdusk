@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // Built by Foxdusk
-// Uploads the Foxdusk AIOS sale zip to the private "downloads" bucket in Supabase.
-// Uploading again replaces the file, so every buyer's link gets the new version.
+// Uploads a sale zip (Foxdusk AIOS or Hookdusk AIOS) to the private "downloads"
+// bucket in Supabase. Uploading again replaces the file, so every buyer's link
+// gets the new version.
 //
-//   node tools/upload-zip.mjs                       (uses ../FOXDUSK AIOS/releases/Foxdusk-AIOS.zip)
-//   node tools/upload-zip.mjs path/to/Foxdusk-AIOS.zip
+//   node tools/upload-zip.mjs                       (../FOXDUSK AIOS/releases/Foxdusk-AIOS.zip)
+//   node tools/upload-zip.mjs hookdusk              (../FOXDUSK AIOS/releases/Hookdusk-AIOS.zip)
+//   node tools/upload-zip.mjs path/to/Hookdusk-AIOS.zip   (app is read from the file name)
 //
 // Reads SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from .env.local. Never prints keys.
 
@@ -13,7 +15,14 @@ import { dirname, join, resolve, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const site = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const zip = resolve(process.argv[2] || join(site, '..', 'FOXDUSK AIOS', 'releases', 'Foxdusk-AIOS.zip'));
+const APPS = {
+  foxdusk: { file: 'Foxdusk-AIOS.zip', env: 'AIOS_DOWNLOAD_FILE' },
+  hookdusk: { file: 'Hookdusk-AIOS.zip', env: 'HOOKDUSK_DOWNLOAD_FILE' },
+};
+const arg = process.argv[2] || 'foxdusk';
+const app = APPS[arg.toLowerCase()] ? arg.toLowerCase() : (/hookdusk/i.test(basename(arg)) ? 'hookdusk' : 'foxdusk');
+const zip = resolve(APPS[arg.toLowerCase()] ? join(site, '..', 'FOXDUSK AIOS', 'releases', APPS[app].file) : arg);
+if (/master/i.test(basename(zip))) { console.error('\n✗ That is your private master copy. Never upload it for buyers.\n'); process.exit(1); }
 const BUCKET = 'downloads';
 
 function readEnv(file) {
@@ -34,7 +43,7 @@ const fail = (msg) => { console.error(`\n✗ ${msg}\n`); process.exit(1); };
 const env = { ...readEnv(join(site, '.env.local')), ...process.env };
 const url = String(env.SUPABASE_URL || '').replace(/\/$/, '');
 const key = String(env.SUPABASE_SERVICE_ROLE_KEY || '');
-const target = env.AIOS_DOWNLOAD_FILE || 'Foxdusk-AIOS.zip';
+const target = env[APPS[app].env] || APPS[app].file;
 if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)) fail('SUPABASE_URL in .env.local is missing or not like https://xxxx.supabase.co');
 if (!key) fail('SUPABASE_SERVICE_ROLE_KEY in .env.local is empty.');
 if (!existsSync(zip)) fail(`Zip not found: ${zip}\n  Build it first in FOXDUSK AIOS with: npm run release`);

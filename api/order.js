@@ -6,6 +6,7 @@
 const S = require('../lib/shared');
 const E = require('../lib/emails');
 const Stripe = require('../lib/stripe');
+const { checkUpgrade } = require('../lib/fulfil');
 
 const TYPES = {
   'image/jpeg': { ext: 'jpg', magic: (b) => b[0] === 0xff && b[1] === 0xd8 },
@@ -23,9 +24,11 @@ module.exports = S.handler(async (req, res) => {
     const s = await S.getSettings();
     // Vercel's servers keep this for a minute, so visitors rarely wait for the database.
     res.setHeader('Vercel-CDN-Cache-Control', 'max-age=60, stale-while-revalidate=300');
+    const prices = Object.fromEntries(Object.keys(S.PRODUCTS).map((p) => [p, S.priceOf(s, p)]));
     return S.send(res, 200, {
-      open: s.sales_open && s.price_rm > 0,
+      open: s.sales_open && Object.values(prices).some((n) => n > 0),
       price_rm: s.price_rm,
+      prices,
       bank: { name: s.bank_name, account_name: s.account_name, account_no: s.account_no },
       duitnow_qr: s.duitnow_qr,
       card: !!(s.stripe_enabled && Stripe.ready()),
@@ -37,12 +40,12 @@ module.exports = S.handler(async (req, res) => {
   }
   if (req.method !== 'POST') throw S.httpError(405, 'Method not allowed.');
   const settings = await S.getSettings();
-  const price = settings.price_rm;
-  if (!settings.sales_open || !(price > 0)) throw S.httpError(503, 'Sales are not open yet.');
-
   const body = await S.readBody(req);
   // Honeypot field that people never see; bots fill it.
   if (body.website) return S.send(res, 200, { ok: true, order_no: 'AIOS-RECEIVED' });
+  const product = S.pickProduct(body.product);
+  const price = S.priceOf(settings, product);
+  if (!settings.sales_open || !(price > 0)) throw S.httpError(503, `${S.PRODUCTS[product].name} is not on sale yet.`);
   await S.checkTurnstile(body.turnstile, req);
 
   const name = clean(body.name, 120);
@@ -52,6 +55,7 @@ module.exports = S.handler(async (req, res) => {
   if (!S.EMAIL_RE.test(email)) throw S.httpError(400, 'Please enter a valid email address.');
   if (!/^[+\d][\d\s-]{6,}$/.test(phone)) throw S.httpError(400, 'Please enter a valid phone number.');
   if (body.agree !== true) throw S.httpError(400, 'Please accept the licence and refund terms.');
+  const upgradeKey = S.PRODUCTS[product].upgradeFrom ? await checkUpgrade(product, body.upgrade_key, email) : null;
 
   const file = body.receipt || {};
   const type = TYPES[file.type];
@@ -71,7 +75,7 @@ module.exports = S.handler(async (req, res) => {
   await S.uploadReceipt(receiptPath, buffer, file.type);
   const [order] = await S.db('orders', {
     method: 'POST', prefer: 'return=representation',
-    body: { order_no: orderNo, name, email, phone, amount_rm: price, receipt_path: receiptPath, status: 'pending' },
+    body: { order_no: orderNo, name, email, phone, product, upgrade_key: upgradeKey, amount_rm: price, receipt_path: receiptPath, status: 'pending' },
   });
 
   // Emails are best effort: the order is already safe in the database.

@@ -1,5 +1,5 @@
 // Built by Foxdusk
-// Foxdusk AIOS order page: shows the price and bank details from aios.json,
+// Foxdusk order form (Foxdusk AIOS, Hookdusk AIOS or the bundle): shows the prices and bank details from aios.json,
 // shrinks large receipt photos, and sends the order to /api/order.
 (() => {
   'use strict';
@@ -9,6 +9,10 @@
   const TYPES = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
   let config = null;
   let receipt = null; // { name, type, data }
+  // The bundle is chosen by default; a link or button can pick another.
+  let product = 'bundle';
+  let prices = { foxdusk: 0, hookdusk: 0, bundle: 0, upgrade_hookdusk: 0, upgrade_foxdusk: 0 };
+  let salesOpen = false;
 
   const money = (n) => `RM ${Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const setText = (sel, text) => document.querySelectorAll(sel).forEach((el) => { el.textContent = text; });
@@ -23,8 +27,31 @@
   loadSettings()
     .then((c) => {
       config = c;
-      const open = c.open !== false && Number(c.price_rm) > 0;
-      setText('[data-price]', open ? money(c.price_rm) : 'Coming soon');
+      prices = { foxdusk: Number(c.price_rm) || 0, hookdusk: 0, bundle: 0, ...Object.fromEntries(Object.entries(c.prices || {}).map(([k, v]) => [k, Number(v) || 0])) };
+      // Upgrade = bundle minus the app already owned (the server works it out the same way).
+      for (const [up, owned] of [['upgrade_hookdusk', 'foxdusk'], ['upgrade_foxdusk', 'hookdusk']]) {
+        if (!(up in prices)) prices[up] = prices.bundle > prices[owned] && prices[owned] > 0 ? prices.bundle - prices[owned] : 0;
+      }
+      salesOpen = c.open !== false;
+      const open = salesOpen && Number(c.price_rm) > 0;
+      const short = (n) => `RM ${Number(n).toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
+      document.querySelectorAll('[data-product-price]').forEach((el) => { const n = prices[el.dataset.productPrice]; el.textContent = salesOpen && n > 0 ? short(n) : 'Coming soon'; });
+      const save = prices.foxdusk + prices.hookdusk - prices.bundle;
+      const deal = salesOpen && prices.bundle > 0 && save > 0;
+      setText('[data-bundle-save]', deal ? `Save ${short(save)} on the two apps` : '');
+      setText('[data-bundle-save-short]', deal ? `Save ${short(save)}` : '');
+      setText('[data-bundle-was]', deal ? short(prices.foxdusk + prices.hookdusk) : '');
+      document.querySelectorAll('[data-plan]').forEach((el) => { el.hidden = !(prices[el.dataset.plan] > 0); });
+      // Only offer what has a price; hide the choice when only one is on sale.
+      const onSale = NEW.filter((k) => prices[k] > 0);
+      const upgrades = UPGRADES.filter((k) => prices[k] > 0);
+      canUpgrade = salesOpen && upgrades.length > 0;
+      setText('[data-upgrade-from]', canUpgrade ? short(Math.min(...upgrades.map((k) => prices[k]))) : '');
+      document.querySelectorAll('[data-upgrade-line]').forEach((el) => { el.hidden = !canUpgrade; });
+      document.querySelectorAll('[data-product]').forEach((b) => { b.hidden = !(prices[b.dataset.product] > 0); });
+      newChoices = onSale.length;
+      document.querySelectorAll('[data-buy]').forEach((a) => { a.hidden = !(salesOpen && prices[a.dataset.buy] > 0); });
+      if (!(prices[product] > 0)) product = onSale[0] || upgrades[0] || product;
       setText('[data-price-tag]', open ? money(c.price_rm) : '');
       setText('[data-price-short]', open ? `RM ${Number(c.price_rm).toLocaleString('en-MY', { maximumFractionDigits: 2 })}` : 'Price coming soon');
       const tag = document.querySelector('[data-price-tag]');
@@ -33,9 +60,9 @@
       setText('[data-account-name]', c.bank?.account_name || '');
       setText('[data-account-no]', c.bank?.account_no || '');
       if (c.duitnow_qr) { $('[data-qr]').src = c.duitnow_qr; $('[data-qr-wrap]').hidden = false; }
-      if (!open) { $('#submit').disabled = true; $('#submit').textContent = 'Sales open soon'; }
+      setProduct(product);
       // The site key comes from TURNSTILE_SITE_KEY in Vercel (or aios.json).
-      if (open && c.turnstile_site_key) startTurnstile(c.turnstile_site_key);
+      if (salesOpen && onSale.length && c.turnstile_site_key) startTurnstile(c.turnstile_site_key);
       // WhatsApp number and contact email from admin > Settings > Contact.
       if ('whatsapp' in c) {
         const href = c.whatsapp
@@ -50,18 +77,65 @@
         if (mail) { mail.textContent = c.contact_email; mail.href = `mailto:${c.contact_email}`; }
       }
       // Card / FPX through Stripe, when switched on in admin > Settings.
-      if (open && c.card) { $('#payMethod').hidden = false; setMethod('card'); }
+      if (salesOpen && onSale.length && c.card) { $('#payMethod').hidden = false; setMethod('card'); }
       // Keep the price search engines read in step with admin > Settings.
       try {
         const ld = document.getElementById('ld');
         const data = JSON.parse(ld.textContent);
-        const app = data['@graph'].find((x) => x['@type'] === 'SoftwareApplication');
+        const app = data['@graph'].find((x) => x['@type'] === 'SoftwareApplication' && x.name === 'Foxdusk AIOS');
         app.offers.price = Number(c.price_rm).toFixed(2);
         app.offers.availability = open ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder';
         ld.textContent = JSON.stringify(data);
       } catch {}
     })
     .catch(() => setText('[data-price]', 'See below'));
+
+  // ---------- what to buy: Foxdusk AIOS, Hookdusk AIOS or both ----------
+  const NEW = ['bundle', 'foxdusk', 'hookdusk'];
+  const UPGRADES = ['upgrade_hookdusk', 'upgrade_foxdusk'];
+  let newChoices = 3;
+  let canUpgrade = false;
+  // New licence or "add the other app to my key": only one of the two shows.
+  function showMode(upgrade) {
+    $('#productPick').hidden = upgrade || newChoices < 2;
+    $('#upgradeBox').hidden = !upgrade;
+    $('#upgradeOpen').hidden = upgrade || !canUpgrade;
+    if (upgrade) $('#upsell').hidden = true;
+  }
+  function setProduct(next) {
+    if (!(next in prices)) return;
+    product = next;
+    showMode(UPGRADES.includes(next));
+    document.querySelectorAll('[data-product]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.product === next)));
+    const price = prices[next];
+    const open = salesOpen && price > 0;
+    // Chose one app? Show what the other adds and how little it costs.
+    const other = { foxdusk: 'hookdusk', hookdusk: 'foxdusk' }[next];
+    const diff = prices.bundle - price;
+    const upsell = $('#upsell');
+    if (other && salesOpen && prices.bundle > 0 && diff > 0) {
+      upsell.querySelector('[data-upsell-app]').textContent = other === 'hookdusk' ? 'Hookdusk AIOS' : 'Foxdusk AIOS';
+      upsell.querySelector('[data-upsell-diff]').textContent = `RM ${diff.toLocaleString('en-MY', { maximumFractionDigits: 2 })}`;
+      upsell.querySelector('[data-upsell-why]').textContent = other === 'hookdusk'
+        ? 'Know what to post: topics, hooks and scripts ready to film.'
+        : 'Turn what you film into a finished, captioned video.';
+      upsell.hidden = false;
+    } else upsell.hidden = true;
+    setText('[data-price]', open ? money(price) : 'Coming soon');
+    const button = $('#submit');
+    if (!button.dataset.busy) {
+      button.disabled = !open;
+      button.textContent = open ? TEXT[method].button : 'Sales open soon';
+    }
+    hideError();
+  }
+  document.querySelectorAll('[data-product]').forEach((b) => b.addEventListener('click', () => setProduct(b.dataset.product)));
+  document.querySelectorAll('[data-buy]').forEach((a) => a.addEventListener('click', () => setProduct(a.dataset.buy)));
+  document.querySelectorAll('[data-product-to]').forEach((b) => b.addEventListener('click', () => setProduct(b.dataset.productTo)));
+  $('#upgradeOpen').addEventListener('click', () => { setProduct(UPGRADES.find((k) => prices[k] > 0) || 'upgrade_hookdusk'); $('#upgradeKey').focus(); });
+  $('#upgradeClose').addEventListener('click', () => setProduct(NEW.find((k) => prices[k] > 0) || 'bundle'));
+  const wanted = new URLSearchParams(location.search).get('product');
+  if (wanted && wanted in prices) product = wanted;
 
   // ---------- how to pay: card / FPX (Stripe) or bank transfer ----------
   let method = 'bank';
@@ -196,6 +270,8 @@
     if (name.length < 2) return showError('Please enter your full name.'), $('#name').focus();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return showError('Please enter a valid email address.'), $('#email').focus();
     if (!/^[+\d][\d\s-]{6,}$/.test(phone)) return showError('Please enter a valid phone number.'), $('#phone').focus();
+    const upgrade_key = UPGRADES.includes(product) ? $('#upgradeKey').value.trim() : undefined;
+    if (upgrade_key !== undefined && !/^FXD[A-Z2-9]{20}$/.test(upgrade_key.toUpperCase().replace(/[^A-Z0-9]/g, ''))) return showError('Enter your licence key. It looks like FXD-XXXXX-XXXXX-XXXXX-XXXXX.'), $('#upgradeKey').focus();
     if (method === 'bank' && !receipt) return showError('Please attach your payment receipt.');
     if (!$('#agree').checked) return showError('Please accept the licence and purchase terms.');
     if (turnstileOn && !turnstileToken) return showError('Please complete the security check above the Send button.');
@@ -208,7 +284,7 @@
         const r = await fetch('/api/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, agree: true, website: $('#website').value, turnstile: turnstileToken }),
+          body: JSON.stringify({ name, email, phone, product, upgrade_key, agree: true, website: $('#website').value, turnstile: turnstileToken }),
         });
         const data = await r.json().catch(() => ({}));
         if (!r.ok || !data.url) throw new Error(data.error || 'Card payment could not start. Please try again, or pay by bank transfer.');
@@ -227,7 +303,7 @@
       const r = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, receipt, agree: true, website: $('#website').value, turnstile: turnstileToken }),
+        body: JSON.stringify({ name, email, phone, product, upgrade_key, receipt, agree: true, website: $('#website').value, turnstile: turnstileToken }),
       });
       const data = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(data.error || 'We could not send your order. Please try again.');

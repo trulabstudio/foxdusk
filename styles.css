@@ -86,8 +86,8 @@ h2 {
 .brand-mark { display: block; width: auto; height: 34px; }
 .brand-word { display: block; width: auto; height: 17px; }
 
-.nav { display: flex; gap: 28px; font-size: .8125rem; }
-.nav a { text-decoration: none; transition: color .2s ease; }
+.nav { display: flex; gap: clamp(16px, 2vw, 28px); font-size: .8125rem; }
+.nav a { text-decoration: none; white-space: nowrap; transition: color .2s ease; }
 .nav a:hover { color: var(--accent); }
 .nav a[aria-current="page"] { color: var(--accent); }
 
@@ -1199,3 +1199,102 @@ footer {
   .project-image img { transition: none; }
   .scene-sun::after { animation: none; }
 }
+
+/* ---------- Hookdusk AIOS ---------- */
+.hook { padding: 14vh var(--gutter); background: var(--light); border-top: 1px solid var(--line-l); }
+.hook-head { max-width: 900px; }
+.hook-tag { display: inline-flex; align-items: center; min-height: 30px; margin-bottom: 20px; padding: 0 14px; border-radius: 99px; background: var(--ink); color: #fff; font-size: .8125rem; font-weight: 500; letter-spacing: 0; }
+.hook-head .section-lede { max-width: 640px; }
+.hook-steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: clamp(24px, 5vh, 44px); counter-reset: none; }
+.hook-steps li { display: flex; flex-direction: column; min-height: 200px; padding: 20px; border-radius: 20px; background: #fff; }
+.hook-steps .num { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--accent); color: var(--ink); font-weight: 500; }
+.hook-steps h3 { margin-top: 18px; padding-bottom: 14px; border-bottom: 1px solid var(--line-l); font-size: 1.25rem; letter-spacing: -.04em; line-height: 1.2; }
+.hook-steps p { margin-top: 14px; color: var(--muted); font-size: .875rem; line-height: 1.45; }
+.hook-council { display: flex; align-items: center; gap: 24px; margin-top: 8px; padding: 20px; border-radius: 20px; background: #fff; }
+.hook-faces { display: flex; flex: none; }
+.hook-faces li + li { margin-left: -14px; }
+.hook-faces img { display: block; width: 64px; height: 64px; border: 3px solid #fff; border-radius: 50%; object-fit: cover; background: var(--light); }
+.hook-council h3 { font-size: 1.25rem; letter-spacing: -.04em; line-height: 1.2; }
+.hook-council p { margin-top: 6px; color: var(--muted); font-size: .875rem; line-height: 1.45; }
+.hook-buy { display: grid; grid-template-columns: 1fr 1fr auto; align-items: stretch; gap: 8px; margin-top: 8px; }
+.hook-price { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 20px; border-radius: 20px; background: #fff; }
+.hook-price span { color: var(--muted); font-size: .875rem; }
+.hook-price b { font-size: clamp(2rem, 5vh, 2.75rem); font-weight: 500; line-height: 1; letter-spacing: -.04em; }
+.hook-price small { color: #a94b0b; font-size: .8125rem; font-weight: 500; }
+.hook-price-best { background: var(--ink); color: #fff; }
+.hook-price-best span { color: var(--soft); }
+.hook-price-best b { color: var(--accent); }
+.hook-price-best small { color: var(--soft); }
+.hook-actions { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 20px; border-radius: 20px; background: #fff; }
+.hook-note { grid-column: 1 / -1; margin-top: 8px; color: var(--muted); font-size: .875rem; }
+
+/* Product choice at the top of the order form */
+.order-product { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 16px; }
+.order-product button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 44px; padding: 12px; border: 1px solid var(--line-l); border-radius: 14px; background: #fff; color: var(--ink); font: inherit; letter-spacing: inherit; text-align: left; cursor: pointer; }
+.order-product button b { font-size: .9375rem; line-height: 1.2; }
+.order-product button small { color: var(--muted); font-size: .75rem; line-height: 1.3; }
+.order-product button span { margin-top: 6px; font-weight: 500; }
+.order-product button[aria-checked="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: #fff8f1; }
+
+@media (max-width: 960px) {
+  .hook-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hook-steps li { min-height: 0; }
+  .hook-buy { grid-template-columns: 1fr 1fr; }
+  .hook-actions { grid-column: 1 / -1; flex-direction: row; flex-wrap: wrap; }
+}
+@media (max-width: 560px) {
+  .hook-steps, .hook-buy { grid-template-columns: 1fr; }
+  .hook-council { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .hook-actions { flex-direction: column; }
+  .hook-actions .btn { width: 100%; }
+  .order-product { grid-template-columns: 1fr; }
+  .order-product button { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 12px; }
+  .order-product button small { grid-column: 1; }
+  .order-product button span { grid-column: 2; grid-row: 1 / span 2; margin-top: 0; }
+}
+
+/* ---------- Plans (upsell to the bundle) ---------- */
+.plans { display: grid; grid-template-columns: 1fr 1.12fr 1fr; align-items: stretch; gap: 8px; margin-top: clamp(24px, 5vh, 44px); }
+.plan { position: relative; display: flex; flex-direction: column; padding: 24px 20px 20px; border-radius: 20px; background: var(--dark-2); }
+.plan h3 { font-size: 1.25rem; letter-spacing: -.04em; line-height: 1.2; }
+.plan-for { margin-top: 4px; color: var(--soft); font-size: .875rem; }
+.plan-price { margin-top: 20px; font-size: clamp(2.25rem, 6vh, 3rem); line-height: 1; letter-spacing: -.04em; }
+.plan-was { margin-right: 6px; color: var(--soft); font-size: .45em; text-decoration-thickness: 2px; vertical-align: middle; }
+.plan-was:empty { display: none; }
+.plan-once { margin-top: 8px; color: var(--soft); font-size: .8125rem; }
+.plan-list { display: grid; gap: 8px; margin: 18px 0 24px; padding-top: 16px; border-top: 1px solid var(--line-d); font-size: .875rem; line-height: 1.35; }
+.plan-list li { position: relative; padding-left: 22px; }
+.plan-list li::before { content: '✓'; position: absolute; left: 0; color: var(--accent); }
+.plan-btn { margin-top: auto; width: 100%; background: transparent; box-shadow: inset 0 0 0 1px var(--line-d); color: #fff; }
+.plan-btn:hover { background: rgb(255 255 255 / .08); }
+.plan-best { background: #fff; color: var(--ink); box-shadow: 0 0 0 2px var(--accent); }
+.plan-best .plan-for, .plan-best .plan-once, .plan-best .plan-was { color: var(--muted); }
+.plan-best .plan-price span { color: #c25e0c; }
+.plan-best .plan-once b { color: #a94b0b; }
+.plan-best .plan-list { border-color: var(--line-l); }
+.plan-best .plan-list li::before { color: #c25e0c; }
+.plan-best .plan-btn { background: var(--accent); box-shadow: none; color: var(--ink); }
+.plan-best .plan-btn:hover { background: #ef7614; }
+.plan-badge { position: absolute; top: -12px; left: 20px; padding: 4px 12px; border-radius: 99px; background: var(--accent); color: var(--ink); font-size: .75rem; font-weight: 500; letter-spacing: 0; }
+
+.order-product .pick-best small em { color: #a94b0b; font-style: normal; font-weight: 500; }
+.order-upsell { display: grid; gap: 10px; padding: 14px; border-radius: 14px; background: #fff3e6; border: 1px dashed var(--accent); font-size: .875rem; line-height: 1.4; }
+.order-upsell-btn { justify-self: start; min-height: 44px; padding: 0 18px; border: 0; border-radius: 99px; background: var(--accent); color: var(--ink); font: inherit; font-weight: 500; letter-spacing: inherit; cursor: pointer; }
+.order-upsell-btn:hover { background: #ef7614; }
+
+@media (max-width: 960px) {
+  .plans { grid-template-columns: 1fr; gap: 20px; }
+  .plan-best { order: -1; }
+}
+
+/* Upgrade: add the other app to an existing key */
+.plans-upgrade { margin-top: 16px; color: var(--soft); font-size: .9375rem; text-align: center; }
+.plans-upgrade a { color: var(--accent); font-weight: 500; }
+.order-upgrade-link { justify-self: start; padding: 4px 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: .8125rem; letter-spacing: inherit; text-align: left; cursor: pointer; }
+.order-upgrade-link b { color: #a94b0b; }
+.order-upgrade-link:hover b { text-decoration: underline; }
+.order-upgrade { display: grid; gap: 12px; padding: 14px; border-radius: 14px; background: var(--light); }
+.order-upgrade-title { font-weight: 500; }
+.order-product-2 { grid-template-columns: 1fr 1fr; margin: 0; }
+.order-upgrade .order-field input { font-family: Menlo, Consolas, monospace; letter-spacing: .02em; }
+@media (max-width: 560px) { .order-product-2 { grid-template-columns: 1fr; } }

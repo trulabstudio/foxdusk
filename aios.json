@@ -9,5 +9,10 @@
   },
   "duitnow_qr": "",
   "max_devices": 2,
-  "turnstile_site_key": ""
+  "turnstile_site_key": "",
+  "prices": {
+    "foxdusk": 299,
+    "hookdusk": 299,
+    "bundle": 399
+  }
 }

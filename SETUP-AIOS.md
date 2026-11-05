@@ -157,3 +157,41 @@ Commit dan push ke GitHub (`main`). Vercel deploy sendiri.
 - Key dikongsi/dijual semula → **Cancel key** (berkesan dalam masa ~1 hari bila
   komputer tu online, paling lama 14 hari).
 - Email pembeli tak sampai → **Resend email**.
+
+---
+
+## Hookdusk AIOS (produk kedua)
+
+Harga: Foxdusk sahaja RM299, Hookdusk sahaja RM299, Bundle kedua-dua RM399.
+Tukar bila-bila masa di **/admin → Settings → Sales** (RM 0 = sorok produk tu dari borang).
+
+- Setiap pesanan ada `product`: `foxdusk`, `hookdusk` atau `bundle`.
+- Setiap lesen ada `products`: app yang key tu boleh buka. Server semak ini masa
+  aktivasi (Hookdusk Studio hantar `product: "hookdusk"`) dan masa muat turun.
+- **Lesen yang wujud sebelum Hookdusk** dapat kedua-dua app secara automatik
+  (sekali sahaja, masa kolum `products` dicipta). Untuk hantar link Hookdusk
+  kepada mereka: admin → order → **Resend email** (email baru ada 2 link).
+- Bundle: satu key buka kedua-dua app. Kedua-dua app di komputer yang sama guna
+  satu slot komputer sahaja.
+
+### Lancar (ikut urutan ni)
+
+1. Supabase **SQL Editor** → paste seluruh `supabase/schema.sql` → **Run**.
+   (Mesti sebelum deploy: API baru baca kolum `products`.)
+2. Upload zip Hookdusk: `node tools/upload-zip.mjs hookdusk`
+3. Commit + push ke `main`. Vercel deploy sendiri.
+4. Uji: /admin → **Free licence** → Product: Hookdusk → aktifkan dalam Hookdusk Studio.
+   Cuba juga key Foxdusk-sahaja dalam Hookdusk: patut ditolak.
+
+### Upsell dan naik taraf
+
+- Pricing tunjuk 3 kad. Bundle di tengah ("Best value", harga asal dipotong), dan
+  borang order pilih Bundle dulu. Bila pembeli pilih satu app, kotak oren tawar
+  "Add the other app for RM100 more".
+- **Naik taraf** (`upgrade_hookdusk` / `upgrade_foxdusk`): pembeli yang ada satu app
+  masukkan key + email asal, bayar harga Bundle tolak app yang dia ada (RM399 − RM299 = RM100).
+  Bila diluluskan, app kedua **ditambah pada key yang sama**, dan email baru ada 2 link.
+  Harga naik taraf dikira sendiri dari harga di Settings.
+- Email key untuk pembeli satu app ada kotak "Add Hookdusk/Foxdusk to this key for RM100"
+  dengan link `foxdusk.com/?product=upgrade_hookdusk#order`.
+- Di admin, pesanan naik taraf tertulis "Upgrade: add … to a key" dan baris **Adds to key**.

@@ -30,9 +30,21 @@ Creators, coaches, educators, podcasters and small marketing teams who record th
 - For motion graphics: a Claude plan or Anthropic API credits for Claude Code, or OpenAI Codex. Transcription, cuts, captions and downloading the video work without either.
 - Footage stays on the user's computer unless they choose a cloud service such as ElevenLabs.
 
+## Hookdusk AIOS
+
+Hookdusk AIOS is a second kit from Foxdusk for TikTok, Reels and Shorts content planning with Claude Code or OpenAI Codex. It runs as Hookdusk Studio in the browser on the user's computer.
+
+- Topics: 5 to 15 topic ideas for the user's niche, each scored for hook strength, relevance and ease of filming, or a breakdown and remix of a reference video.
+- Hooks: 10 openings from 14 hook formulas, each with a spoken line, on-screen text and an opening visual.
+- Scripts: timed beats with on-screen text, visuals and pattern interrupts, plus call to action, caption and hashtags, in BM santai, BM formal, Manglish or English.
+- Content council: four fictional advisors score each script and suggest one fix each.
+- Price: RM 299 one-time, or RM 399 for a bundle with Foxdusk AIOS. One licence key works on 2 computers.
+- Needs a Claude plan or Anthropic API credits for Claude Code, or OpenAI Codex.
+
 ## Links
 
 - Product and purchase: https://www.foxdusk.com/
+- Hookdusk AIOS: https://www.foxdusk.com/#hookdusk
 - Frequently asked questions: https://www.foxdusk.com/#faq
 - Licence and purchase terms: https://www.foxdusk.com/aios-terms.html
 - Privacy policy: https://www.foxdusk.com/privacy.html
