@@ -111,6 +111,7 @@ async function renderDashboard() {
     <h2 class="section-title">Sales by product <span class="muted" style="font-weight:400;font-size:14px">${p}</span></h2>
     <div class="grid-3">
       ${Object.entries(s.by_product || {}).map(([k, v]) => kpi(esc(PRODUCT[k] || v.name), esc(rm(v.revenue, 0)), `${v.orders} paid order${v.orders === 1 ? '' : 's'}`)).join('')}
+      ${kpi('All products', esc(rm(s.revenue, 0)), `${s.paid_orders} paid order${s.paid_orders === 1 ? '' : 's'}`, ' kpi-total')}
     </div>
 
     <h2 class="section-title">Licences</h2>

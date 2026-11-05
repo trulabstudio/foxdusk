@@ -90,6 +90,20 @@
     })
     .catch(() => setText('[data-price]', 'See below'));
 
+  // ---------- Hookdusk Studio screens (tabs) ----------
+  const SHOTS = {
+    topics: 'Hookdusk Studio, Topic step: eight topic ideas for a home-baking creator, each scored for hook, relevance and ease of filming.',
+    hooks: 'Hookdusk Studio, Hook step: ten hooks in BM, each with on-screen text and the first visual.',
+    script: 'Hookdusk Studio, Script step: a 30-second script in timed beats with what to say, on-screen text and visuals.',
+    council: 'Hookdusk Studio, content council: four advisors score the script and give one fix each.',
+  };
+  document.querySelectorAll('[data-shot]').forEach((tab) => tab.addEventListener('click', () => {
+    document.querySelectorAll('[data-shot]').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+    const img = document.getElementById('hookShot');
+    img.src = `brand/hookdusk/studio-${tab.dataset.shot}.jpg`;
+    img.alt = SHOTS[tab.dataset.shot];
+  }));
+
   // ---------- what to buy: Foxdusk AIOS, Hookdusk AIOS or both ----------
   const NEW = ['bundle', 'foxdusk', 'hookdusk'];
   const UPGRADES = ['upgrade_hookdusk', 'upgrade_foxdusk'];

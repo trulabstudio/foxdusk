@@ -293,3 +293,7 @@ dialog .muted { margin-top: 6px; }
   .seg { width: 100%; overflow-x: auto; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Sales by product: the sixth box is the total of all products */
+.kpi-total { background: var(--ink, #292521); color: #fff; box-shadow: none; }
+.kpi-total .kpi-label, .kpi-total .kpi-note { color: #cbc1b6; }

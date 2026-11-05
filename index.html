@@ -107,8 +107,13 @@
       "applicationSubCategory": "Content planning",
       "operatingSystem": "macOS, Windows",
       "url": "https://www.foxdusk.com/#hookdusk",
-      "inLanguage": ["en", "ms"],
-      "publisher": { "@id": "https://www.foxdusk.com/#org" },
+      "inLanguage": [
+        "en",
+        "ms"
+      ],
+      "publisher": {
+        "@id": "https://www.foxdusk.com/#org"
+      },
       "featureList": [
         "Topic ideas scored for hook, relevance and ease of filming",
         "10 hooks from 14 hook formulas",
@@ -123,7 +128,9 @@
         "priceCurrency": "MYR",
         "availability": "https://schema.org/InStock",
         "url": "https://www.foxdusk.com/?product=hookdusk#order",
-        "seller": { "@id": "https://www.foxdusk.com/#org" }
+        "seller": {
+          "@id": "https://www.foxdusk.com/#org"
+        }
       }
     },
     {
@@ -132,10 +139,26 @@
       "mainEntity": [
         {
           "@type": "Question",
+          "name": "What's the difference between Foxdusk and Hookdusk?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Hookdusk helps you decide what to post and what to say: topics, hooks and a script ready to film. Foxdusk turns the recording into a finished video: cuts, captions and motion graphics. The bundle gives you both on one key."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "I bought one app. Can I add the other later?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Choose “Add the other app” on the order form and enter your licence key. You pay the bundle price minus what you paid, and the app is added to the same key."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "Are there really no monthly fees?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "There's no monthly fee to Foxdusk. Services you choose to connect, such as Claude or ElevenLabs, bill you separately under their own plans."
+            "text": "There's no monthly fee to Foxdusk. Services you connect, such as Claude, Codex or ElevenLabs, bill you separately under their own plans. Hookdusk always needs Claude Code or Codex."
           }
         },
         {
@@ -143,7 +166,7 @@
           "name": "How many computers can I use it on?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "One licence key works on 2 computers. Deactivate a computer in Foxdusk Studio to move it, or email us and we'll reset it."
+            "text": "One licence key works on 2 computers. With the bundle, Foxdusk and Hookdusk on the same computer use one slot. Deactivate a computer in the Studio to move it, or email us and we'll reset it."
           }
         },
         {
@@ -151,7 +174,7 @@
           "name": "Do I need Claude Code?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "You need Claude Code or OpenAI Codex for motion graphics, reels and showreels. Transcription, cuts, captions and downloading your video work in Foxdusk Studio without either one."
+            "text": "For Hookdusk, yes: it writes with Claude Code or OpenAI Codex. For Foxdusk, only for motion graphics, reels and showreels. Transcription, cuts, captions and downloading your video work in Foxdusk Studio without either one."
           }
         },
         {
@@ -403,6 +426,7 @@
         <span class="hook-tag reveal">New · Hookdusk AIOS</span>
         <h2 class="reveal">Know what to post.<br>Know what to say.</h2>
         <p class="section-lede reveal">Hookdusk plans your TikTok, Reels and Shorts with Claude Code or Codex. Topics for your niche, hooks that stop the scroll, and a script ready to film, in BM santai, BM formal, Manglish or English.</p>
+        <p class="hook-needs reveal">Runs on your computer. Needs a Claude plan or Anthropic API credits for Claude Code, or OpenAI Codex, billed by them.</p>
       </div>
       <ol class="hook-steps">
         <li class="reveal"><span class="num">1</span><h3>Topic</h3><p>5 to 15 topics for your niche, each scored for hook strength, relevance and how easy it is to film. Or paste a video you like and remix its structure.</p></li>
@@ -410,6 +434,20 @@
         <li class="reveal"><span class="num">3</span><h3>Script</h3><p>Timed beats with what to say, on-screen text and pattern interrupts, plus the call to action, caption and hashtags.</p></li>
         <li class="reveal"><span class="num">4</span><h3>Film &amp; post</h3><p>Read from the built-in teleprompter, copy the caption, and post.</p></li>
       </ol>
+      <figure class="hook-shots reveal" id="hookShots">
+        <div class="hook-tabs" role="tablist" aria-label="Hookdusk Studio screens">
+          <button type="button" role="tab" aria-selected="true" data-shot="topics">Topic</button>
+          <button type="button" role="tab" aria-selected="false" data-shot="hooks">Hook</button>
+          <button type="button" role="tab" aria-selected="false" data-shot="script">Script</button>
+          <button type="button" role="tab" aria-selected="false" data-shot="council">Council</button>
+        </div>
+        <div class="hook-window">
+          <div class="hook-window-bar" aria-hidden="true"><i></i><i></i><i></i><span>Hookdusk Studio</span></div>
+          <img id="hookShot" src="brand/hookdusk/studio-topics.jpg" width="1600" height="1000" loading="lazy" alt="Hookdusk Studio, Topic step: eight topic ideas for a home-baking creator, each scored for hook, relevance and ease of filming.">
+        </div>
+        <figcaption>A sample project in Hookdusk Studio. Your topics, hooks and scripts are written by Claude for your own niche.</figcaption>
+      </figure>
+
       <div class="hook-council reveal">
         <ul class="hook-faces" aria-hidden="true">
           <li><img src="brand/hookdusk/scout.webp" alt="" width="64" height="64" loading="lazy"></li>
@@ -417,7 +455,7 @@
           <li><img src="brand/hookdusk/storyteller.webp" alt="" width="64" height="64" loading="lazy"></li>
           <li><img src="brand/hookdusk/contrarian.webp" alt="" width="64" height="64" loading="lazy"></li>
         </ul>
-        <div><h3>A content council checks every script</h3><p>Four fictional advisors, The Scout, The Hook Engineer, The Storyteller and The Contrarian, score your script from their own angle and give one fix each. One click applies the fixes.</p></div>
+        <div><h3>A content council checks every script</h3><p>Four fictional advisors (The Scout, The Hook Engineer, The Storyteller and The Contrarian) score your script from their own angle and give one fix each. One click applies the fixes.</p></div>
       </div>
       <div class="hook-buy reveal">
         <div class="hook-price"><span>Hookdusk AIOS</span><b data-product-price="hookdusk">RM 299</b></div>
@@ -426,7 +464,7 @@
           <a class="btn btn-wide" href="#order" data-buy="hookdusk">Buy Hookdusk <span aria-hidden="true">→</span></a>
           <a class="btn btn-wide btn-dark" href="#order" data-buy="bundle">Get the bundle <span aria-hidden="true">→</span></a>
         </div>
-        <p class="hook-note">Already have Foxdusk AIOS? <a href="#order" data-buy="upgrade_hookdusk">Add Hookdusk to your key for <span data-upgrade-from>RM 100</span></a>. Bought Foxdusk before Hookdusk launched? Your key already unlocks it: <a href="#contact">message us</a> for the download link.</p>
+        <p class="hook-note">Already have Foxdusk AIOS? <a href="#order" data-buy="upgrade_hookdusk">Add Hookdusk to your key for <span data-upgrade-from>RM 100</span></a>.</p>
       </div>
     </section>
 
@@ -470,7 +508,7 @@
           <h3>Hookdusk AIOS</h3>
           <p class="plan-for">Know what to post and say</p>
           <p class="plan-price" data-product-price="hookdusk">RM 299</p>
-          <p class="plan-once">one-time · 2 computers</p>
+          <p class="plan-once">one-time · 2 computers · needs Claude or Codex</p>
           <ul class="plan-list">
             <li>Topics scored for your niche</li>
             <li>10 hooks from 14 formulas</li>
@@ -485,8 +523,8 @@
       <ul class="price-grid">
         <li class="reveal"><h3>One-off price</h3><p>Shown upfront, no subscription. Pay by bank transfer or DuitNow.</p></li>
         <li class="reveal"><h3>2 computers</h3><p>One licence key works on your laptop and your desktop.</p></li>
-        <li class="reveal"><h3>Free transcription</h3><p>Built in. Claude and ElevenLabs are optional and billed by them.</p></li>
-        <li class="reveal"><h3>Your videos are yours</h3><p>Use what you make for yourself and for your clients.</p></li>
+        <li class="reveal"><h3>AI billed by its provider</h3><p>Hookdusk, and Foxdusk's motion graphics, use your Claude or Codex plan. Foxdusk's transcription is free.</p></li>
+        <li class="reveal"><h3>Your work is yours</h3><p>Videos and scripts you make are yours, for yourself and for your clients.</p></li>
       </ul>
 
       <!-- Buy: transfer, then send the receipt. Filled from aios.json by aios.js -->
@@ -600,9 +638,9 @@
           </div><div class="lens" id="lens"><span>Stuck here</span><span>Paid</span><span>Installed</span><span>Original length</span></div></div>
         </div>
         <ol class="how-steps" id="howSteps">
-          <li><div><h3>Transfer and send your receipt</h3><p>Pay by bank transfer, then send the receipt with the form below.</p></div><span class="num">1</span></li>
+          <li><div><h3>Transfer and send your receipt</h3><p>Choose your app or the bundle, pay by bank transfer, then send the receipt with the order form above.</p></div><span class="num">1</span></li>
           <li><div><h3>Get your key</h3><p>We confirm the payment and email your download link and licence key.</p></div><span class="num">2</span></li>
-          <li><div><h3>Install once</h3><p>Unzip, open Start Foxdusk, enter your key and click Install.</p></div><span class="num">3</span></li>
+          <li><div><h3>Install once</h3><p>Unzip, open Start Foxdusk or Start Hookdusk, enter your key and click Install.</p></div><span class="num">3</span></li>
           <li><div><h3>Edit your first video</h3><p>Add a recording and follow the steps to a finished MP4.</p></div><span class="num">4</span></li>
         </ol>
       </div>
@@ -700,9 +738,11 @@
     <section class="faq tone-light" id="faq">
       <div class="faq-side reveal"><h2>FAQ</h2><p>Have a different question? Ask us, and we will answer plainly.</p><a class="btn btn-dark btn-wide" href="#contact">Ask us <span aria-hidden="true">→</span></a></div>
       <div class="faq-list reveal">
-        <details><summary>Are there really no monthly fees?</summary><p>There's no monthly fee to Foxdusk. Services you choose to connect, such as Claude or ElevenLabs, bill you separately under their own plans.</p></details>
-        <details><summary>How many computers can I use it on?</summary><p>One licence key works on 2 computers. Deactivate a computer in Foxdusk Studio to move it, or email us and we'll reset it.</p></details>
-        <details><summary>Do I need Claude Code?</summary><p>You need Claude Code or OpenAI Codex for motion graphics, reels and showreels. Transcription, cuts, captions and downloading your video work in Foxdusk Studio without either one.</p></details>
+        <details><summary>What's the difference between Foxdusk and Hookdusk?</summary><p>Hookdusk helps you decide what to post and what to say: topics, hooks and a script ready to film. Foxdusk turns the recording into a finished video: cuts, captions and motion graphics. The bundle gives you both on one key.</p></details>
+        <details><summary>I bought one app. Can I add the other later?</summary><p>Yes. Choose “Add the other app” on the order form and enter your licence key. You pay the bundle price minus what you paid, and the app is added to the same key.</p></details>
+        <details><summary>Are there really no monthly fees?</summary><p>There's no monthly fee to Foxdusk. Services you connect, such as Claude, Codex or ElevenLabs, bill you separately under their own plans. Hookdusk always needs Claude Code or Codex.</p></details>
+        <details><summary>How many computers can I use it on?</summary><p>One licence key works on 2 computers. With the bundle, Foxdusk and Hookdusk on the same computer use one slot. Deactivate a computer in the Studio to move it, or email us and we'll reset it.</p></details>
+        <details><summary>Do I need Claude Code?</summary><p>For Hookdusk, yes: it writes with Claude Code or OpenAI Codex. For Foxdusk, only for motion graphics, reels and showreels. Transcription, cuts, captions and downloading your video work in Foxdusk Studio without either one.</p></details>
         <details><summary>Can I use another AI instead of Claude Code?</summary><p>Yes, OpenAI Codex. Every Foxdusk skill comes in a Claude Code version and a Codex version, so you can use whichever plan you already pay for. Other AI tools, such as ChatGPT in the browser, Gemini or Cursor, aren't supported.</p></details>
         <details><summary>What do I need to run it?</summary><p>A Mac or a Windows PC with at least 5 GB free, and an internet connection. Foxdusk downloads its own tools the first time.</p></details>
         <details><summary>Do I need the internet?</summary><p>Yes. Foxdusk needs the internet to check your licence, and Claude Code or Codex work online. Your videos stay on your computer: Foxdusk only uploads them if you choose a service such as ElevenLabs.</p></details>
@@ -715,7 +755,7 @@
     <section class="closing tone-dark" id="contact">
       <div class="closing-text">
         <h2 class="reveal">Your video should be live by now.</h2>
-        <p class="reveal">Questions about Foxdusk AIOS? Message us and we'll answer plainly.</p>
+        <p class="reveal">Questions about Foxdusk or Hookdusk? Message us and we'll answer plainly.</p>
         <div class="contact-row reveal">
           <a class="btn btn-wide" id="whatsappLink" href="#contact"><span class="btn-label">Message us on WhatsApp</span> <span aria-hidden="true">→</span></a>
           <a class="text-link" id="emailLink" href="#contact"></a>

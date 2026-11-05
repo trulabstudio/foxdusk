@@ -1298,3 +1298,17 @@ footer {
 .order-product-2 { grid-template-columns: 1fr 1fr; margin: 0; }
 .order-upgrade .order-field input { font-family: Menlo, Consolas, monospace; letter-spacing: .02em; }
 @media (max-width: 560px) { .order-product-2 { grid-template-columns: 1fr; } }
+
+/* Hookdusk Studio screens */
+.hook-shots { margin: 8px 0 0; padding: 20px; border-radius: 20px; background: #fff; }
+.hook-tabs { display: flex; flex-wrap: wrap; gap: 4px; width: fit-content; max-width: 100%; margin-bottom: 16px; padding: 4px; border-radius: 14px; background: var(--light); }
+.hook-tabs button { min-height: 44px; padding: 0 18px; border: 0; border-radius: 11px; background: none; color: var(--muted); font: inherit; font-size: .9375rem; letter-spacing: inherit; cursor: pointer; }
+.hook-tabs button[aria-selected="true"] { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgb(41 37 33 / .12); }
+.hook-window { overflow: hidden; border: 1px solid var(--line-l); border-radius: 14px; background: var(--white); }
+.hook-window-bar { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-bottom: 1px solid var(--line-l); background: var(--light); }
+.hook-window-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--line-l); }
+.hook-window-bar span { margin-left: 8px; color: var(--muted); font-size: .75rem; }
+.hook-window img { display: block; width: 100%; height: auto; }
+.hook-shots figcaption { margin-top: 12px; color: var(--muted); font-size: .8125rem; }
+@media (max-width: 560px) { .hook-shots { padding: 12px; } .hook-tabs { width: 100%; } .hook-tabs button { flex: 1; padding: 0 8px; } }
+.hook-needs { margin-top: 12px; max-width: 640px; color: var(--muted); font-size: .8125rem; line-height: 1.45; }
