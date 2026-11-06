@@ -11,6 +11,7 @@
 // POST { action: "revoke" | "restore", key }
 // POST { action: "reset_devices", key }     free both computer slots
 // POST { action: "issue", name, email, product }  a free licence (you, testers, partners)
+// POST { action: "delete_order", id, confirm: <order no> }  remove a test order for good
 'use strict';
 
 const S = require('../lib/shared');
@@ -33,6 +34,7 @@ const getLicense = async (key) => {
 // ---------- dashboard numbers ----------
 // Days are counted in Malaysia time (UTC+8). Sales count when an order is
 // approved (decided_at); free licences (RM 0) are counted apart from sales.
+// Stripe test-mode orders are left out of every number.
 const MY = 8 * 3600e3;
 const dayOf = (iso) => new Date(new Date(iso).getTime() + MY).toISOString().slice(0, 10);
 const PERIODS = { '7d': 7, '30d': 30, '90d': 90, all: null };
@@ -40,10 +42,13 @@ const PERIODS = { '7d': 7, '30d': 30, '90d': 90, all: null };
 async function stats(periodParam) {
   const period = Object.hasOwn(PERIODS, periodParam) ? periodParam : '30d';
   const days = PERIODS[period];
-  const [orders, licenses] = await Promise.all([
-    S.db('orders?select=id,order_no,name,email,status,product,amount_rm,created_at,decided_at&order=created_at.desc&limit=10000'),
+  const [allOrders, allLicenses] = await Promise.all([
+    S.db('orders?select=id,order_no,name,email,status,product,amount_rm,created_at,decided_at,stripe_session_id&order=created_at.desc&limit=10000'),
     S.db('licenses?select=key,status,order_id,activations(id)&limit=10000'),
   ]);
+  const testIds = new Set(allOrders.filter(S.isTestOrder).map((o) => o.id));
+  const orders = allOrders.filter((o) => !testIds.has(o.id));
+  const licenses = allLicenses.filter((l) => !testIds.has(l.order_id));
   const today = dayOf(new Date().toISOString());
   const from = days ? dayOf(new Date(Date.now() - (days - 1) * 86400e3).toISOString()) : null;
   const inPeriod = (iso) => !!iso && (!from || dayOf(iso) >= from);
@@ -251,6 +256,24 @@ module.exports = S.handler(async (req, res) => {
       let emailed = false;
       if (body.notify) { try { await emailKey(o, lic); emailed = true; } catch {} }
       return S.send(res, 200, { ok: true, key: lic.key, emailed });
+    }
+    case 'delete_order': {
+      // For test purchases: removes the order, its licence (and that key's
+      // computers), and its receipt file. Cannot be undone.
+      const o = await getOrder(body.id);
+      if (body.confirm !== o.order_no) throw S.httpError(400, 'Order number does not match. Nothing was deleted.');
+      const product = S.PRODUCTS[S.productOf(o)];
+      if (product.upgradeFrom && o.status === 'approved' && o.upgrade_key) {
+        // Take the app this upgrade added back off the key, so the key is as it was.
+        const key = encodeURIComponent(S.normalizeKey(o.upgrade_key));
+        const [lic] = await S.db(`licenses?key=eq.${key}&select=key,products`);
+        const left = lic ? S.appsOf(lic).filter((a) => !product.apps.includes(a)) : [];
+        if (lic && left.length) await S.db(`licenses?key=eq.${key}`, { method: 'PATCH', body: { products: left } });
+      }
+      await S.db(`licenses?order_id=eq.${o.id}`, { method: 'DELETE' });
+      await S.db(`orders?id=eq.${o.id}`, { method: 'DELETE' });
+      await S.deleteReceipt(o.receipt_path);
+      return S.send(res, 200, { ok: true });
     }
     default:
       throw S.httpError(400, 'Unknown action.');

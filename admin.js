@@ -20,6 +20,7 @@ const PRODUCT_SHORT = { foxdusk: 'Foxdusk', hookdusk: 'Hookdusk', bundle: 'Bundl
 const APP = { foxdusk: 'Foxdusk AIOS', hookdusk: 'Hookdusk AIOS' };
 const productOf = (o) => (PRODUCT[o?.product] ? o.product : 'foxdusk');
 const METHOD = { bank_transfer: 'Bank transfer', stripe: 'Card / FPX (Stripe)' };
+const isTest = (o) => /^cs_test_/.test(String(o?.stripe_session_id || ''));
 const pill = (status, label) => `<span class="pill ${esc(status)}">${esc(label || STATUS[status] || status)}</span>`;
 
 let supabase;
@@ -229,7 +230,7 @@ function paintTable() {
   box.innerHTML = `<div class="orow orow-head" aria-hidden="true"><span>Buyer</span><span>Order</span><span class="r">Amount</span><span>Status</span><span></span></div>` + state.orders.map((o) => {
     const lic = (o.licenses || [])[0];
     const free = o.status === 'approved' && Number(o.amount_rm) === 0;
-    const status = free ? pill('free', 'Free licence') : lic && lic.status === 'revoked' ? pill('revoked', 'Key cancelled') : pill(o.status);
+    const status = (free ? pill('free', 'Free licence') : lic && lic.status === 'revoked' ? pill('revoked', 'Key cancelled') : pill(o.status)) + (isTest(o) ? ` ${pill('test', 'Test')}` : '');
     return `<button class="orow" type="button" data-open="${esc(o.id)}">
       <span class="o-who"><b>${esc(o.name)}</b><small>${esc(o.email)}</small></span>
       <span class="o-meta"><b class="mono">${esc(o.order_no)}</b><small>${esc(PRODUCT_SHORT[productOf(o)])} · ${esc(when(o.created_at))}</small></span>
@@ -258,7 +259,7 @@ async function openOrder(id) {
   const free = Number(o.amount_rm) === 0;
   const phoneDigits = String(o.phone || '').replace(/\D/g, '').replace(/^0/, '60');
   $('#drawer').innerHTML = `
-    <header class="drawer-head"><div>${free ? pill('free', 'Free licence') : pill(o.status)}<h2 id="drawerTitle">${esc(o.name)}</h2><small class="mono">${esc(o.order_no)}</small></div>
+    <header class="drawer-head"><div>${free ? pill('free', 'Free licence') : pill(o.status)}${isTest(o) ? ` ${pill('test', 'Test')}` : ''}<h2 id="drawerTitle">${esc(o.name)}</h2><small class="mono">${esc(o.order_no)}</small></div>
       <button class="close-btn" type="button" data-close-drawer aria-label="Close">×</button></header>
     <div class="drawer-body">
       <section><h3>Payment</h3><div class="box"><dl class="kv">
@@ -285,6 +286,8 @@ async function openOrder(id) {
       ${o.status === 'awaiting_payment' ? '<section><p class="note">The buyer was sent to Stripe to pay. When Stripe confirms the payment, this order is approved and the key is emailed automatically. If they leave without paying, it is marked as not completed after an hour.</p></section>' : ''}
       ${o.note ? `<section><h3>Note</h3><p class="note">${esc(o.note)}</p></section>` : ''}
       ${o.receipt_path ? `<section><h3>Receipt</h3><div class="receipt" id="receiptBox"><p class="muted">Loading receipt…</p></div><p style="margin-top:8px"><a class="link-btn" id="receiptLink" href="#" target="_blank" rel="noopener" hidden>Open full size ↗</a></p></section>` : ''}
+      <section class="danger-zone"><h3>Test order?</h3><p class="muted">Delete it to keep your sales numbers clean. ${isTest(o) ? 'This was paid with Stripe test mode, so it is already left out of the dashboard.' : 'Only do this for your own test purchases.'}</p>
+        <div class="actions-row"><button class="btn btn-danger btn-sm" type="button" data-act="delete_order">Delete order</button></div></section>
 
     </div>
     ${o.status === 'pending' ? `<footer class="drawer-foot"><button class="btn btn-danger" type="button" data-act="reject">Reject</button><button class="btn btn-primary" type="button" data-act="approve">Confirm &amp; send key</button></footer>` : ''}`;
@@ -307,6 +310,22 @@ async function act(o, lic, action, btn) {
   const amount = rm(o.amount_rm);
   if (action === 'approve' && !(await ask(`Confirm ${amount} from ${o.name}?`, `${PRODUCT[productOf(o)]}. Check your bank account first. ${o.upgrade_key ? `The app is added to key ${o.upgrade_key} and the download links are emailed to ${o.email}.` : `A licence key and the download link will be emailed to ${o.email}.`}`, 'Confirm & send key'))) return;
   if (action === 'revoke' && !(await ask('Cancel this key?', 'The app stops working on its computers the next time it checks (within a day when online), and the download link stops working.', 'Cancel key', true))) return;
+  if (action === 'delete_order') {
+    const real = !isTest(o) && o.status === 'approved' && Number(o.amount_rm) > 0;
+    const what = `Order ${o.order_no}${lic ? `, licence key ${lic.key} and its computers` : ''}${o.receipt_path ? ', and the receipt' : ''} will be removed for good.${o.upgrade_key && o.status === 'approved' ? ` The app it added is taken off key ${o.upgrade_key}.` : ''}`;
+    const warn = real ? ' This looks like a real paid order: deleting does not refund the buyer, and their key stops working.' : '';
+    if (!(await ask(`Delete order ${o.order_no}?`, `${what}${warn} This cannot be undone.`, 'Delete order', true))) return;
+    btn.disabled = true;
+    try {
+      await api(null, { action, id: o.id, confirm: o.order_no });
+      toast('Order deleted.');
+      closeDrawer();
+      if ($('#orderTable')) await renderOrders().catch(() => {});
+      else if ($('#chart')) await renderDashboard().catch(() => {});
+      else await loadOrders().catch(() => {});
+    } catch (e) { toast(e.message, true); btn.disabled = false; }
+    return;
+  }
   if (action === 'reset_devices' && !(await ask('Reset computers?', 'Both computer slots are freed. The buyer can then activate on a new computer.', 'Reset computers'))) return;
   let extra = {};
   if (action === 'reject') {
