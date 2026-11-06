@@ -1140,7 +1140,10 @@ footer {
   .sim-mini .btn { width: 100%; border: 0; font: inherit; cursor: pointer; }
   .wa-float { width: 52px; height: 52px; }
   .wa-float svg { width: 28px; height: 28px; }
-  footer { padding-right: 68px; }
+  /* Phones: centred company text on its own line, links centred in a row under it.
+     Room at the bottom keeps the floating WhatsApp button clear of the links. */
+  footer { flex-wrap: wrap; justify-content: center; text-align: center; row-gap: 4px; padding-bottom: 84px; }
+  footer > span { flex: 1 1 100%; }
   .build-cards { grid-template-columns: minmax(0, 1fr); }
   .faq { grid-template-columns: minmax(0, 1fr); }
   .price-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
