@@ -195,3 +195,28 @@ Tukar bila-bila masa di **/admin → Settings → Sales** (RM 0 = sorok produk t
 - Email key untuk pembeli satu app ada kotak "Add Hookdusk/Foxdusk to this key for RM100"
   dengan link `foxdusk.com/?product=upgrade_hookdusk#order`.
 - Di admin, pesanan naik taraf tertulis "Upgrade: add … to a key" dan baris **Adds to key**.
+
+---
+
+## Fox Studio (produk ketiga)
+
+Fox Studio ialah app desktop (Mac dan Windows), dijual sendiri. Harga lalai **RM1,999**.
+Tukar di **/admin → Settings → Sales** (RM 0 = sorok dari borang).
+
+- Pesanan `product: "foxstudio"`, lesen `products: ['foxstudio']`. App Fox Studio hantar
+  `product: "foxstudio"` masa aktivasi, jadi kunci Foxdusk/Hookdusk tak boleh buka Fox Studio,
+  dan kunci Fox Studio tak boleh buka Foxdusk/Hookdusk.
+- **Tiada link muat turun.** Bila bayaran disahkan (Stripe: automatik; bank transfer: bila kau
+  klik Confirm), pembeli terima email dengan kunci dan mesej bahawa team akan hubungi untuk
+  hantar installer. Email notifikasi admin ingatkan kau untuk hantar installer Mac atau Windows.
+- Tiada bundle atau naik taraf dengan Foxdusk/Hookdusk.
+- Installer dibina dalam `FOXDUSK AIOS/Fox-Studio/app/desktop` (`npm run dist:mac` di Mac,
+  `npm run dist:win` di Windows) dan keluar di `Fox-Studio/app/dist-desktop/`.
+
+### Lancar (ikut urutan ni)
+
+1. Supabase **SQL Editor** → paste seluruh `supabase/schema.sql` → **Run**.
+   (Mesti sebelum deploy: Settings simpan kolum `price_foxstudio_rm`.)
+2. Commit + push ke `main`. Vercel deploy sendiri.
+3. Uji: /admin → **Free licence** → Product: Fox Studio → aktifkan dalam app Fox Studio.
+   Cuba juga kunci Foxdusk-sahaja dalam Fox Studio: patut ditolak.

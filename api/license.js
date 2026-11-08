@@ -1,7 +1,8 @@
 // Built by Foxdusk
 // POST /api/license: Foxdusk Studio or Hookdusk Studio activates or refreshes a licence on one computer.
 //   { action: "activate", key, device_id, device_name, version, product }
-//   product is "hookdusk" from Hookdusk Studio; Foxdusk Studio sends none (= "foxdusk").
+//   product is "hookdusk" from Hookdusk Studio, "foxstudio" from the Fox Studio app;
+//   Foxdusk Studio sends none (= "foxdusk").
 //   A key only unlocks the apps in its licence's products list. Both apps on the
 //   same computer share one device ID, so they use one computer slot.
 //   { action: "deactivate", key, device_id }   frees this computer's slot
@@ -19,7 +20,8 @@ module.exports = S.handler(async (req, res) => {
   if (!/^FXD(-[A-Z2-9]{5}){4}$/.test(key)) throw S.httpError(400, 'That licence key is not in the right format. It looks like FXD-XXXXX-XXXXX-XXXXX-XXXXX.', { code: 'invalid' });
   if (!/^[a-f0-9-]{20,64}$/i.test(device)) throw S.httpError(400, 'Invalid device.', { code: 'invalid' });
 
-  const app = body.product === 'hookdusk' ? 'hookdusk' : 'foxdusk';
+  // Hookdusk Studio sends "hookdusk", Fox Studio sends "foxstudio"; Foxdusk Studio sends none.
+  const app = body.product === 'hookdusk' || body.product === 'foxstudio' ? body.product : 'foxdusk';
   const [lic] = await S.db(`licenses?key=eq.${encodeURIComponent(key)}&select=key,email,status,max_devices,products,activations(device_id)`);
   if (!lic) throw S.httpError(404, 'This licence key was not found. Check it against your email.', { code: 'invalid' });
 

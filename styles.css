@@ -1317,3 +1317,14 @@ footer {
 .hook-shots figcaption { margin-top: 12px; color: var(--muted); font-size: .8125rem; }
 @media (max-width: 560px) { .hook-shots { padding: 12px; } .hook-tabs { width: 100%; } .hook-tabs button { flex: 1; padding: 0 8px; } }
 .hook-needs { margin-top: 12px; max-width: 640px; color: var(--muted); font-size: .8125rem; line-height: 1.45; }
+
+/* Fox Studio: a single plan card under the three AIOS plans, and a full-width choice in the order form */
+.plan-solo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); column-gap: 32px; align-items: center; margin-top: 8px; padding: 28px 28px 24px; border: 1px solid var(--accent); }
+.plan-solo .plan-badge { position: static; display: inline-block; margin-bottom: 10px; }
+.plan-solo .plan-list { margin: 0; padding-top: 0; border-top: 0; }
+.plan-solo .plan-btn { grid-column: 1 / -1; margin-top: 20px; }
+.order-product .pick-wide { grid-column: 1 / -1; }
+@media (max-width: 960px) {
+  .plan-solo { grid-template-columns: 1fr; }
+  .plan-solo .plan-list { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line-d); }
+}

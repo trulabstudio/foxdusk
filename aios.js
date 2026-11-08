@@ -1,5 +1,5 @@
 // Built by Foxdusk
-// Foxdusk order form (Foxdusk AIOS, Hookdusk AIOS or the bundle): shows the prices and bank details from aios.json,
+// Foxdusk order form (Foxdusk AIOS, Hookdusk AIOS, the bundle or Fox Studio): shows the prices and bank details from aios.json,
 // shrinks large receipt photos, and sends the order to /api/order.
 (() => {
   'use strict';
@@ -11,7 +11,7 @@
   let receipt = null; // { name, type, data }
   // The bundle is chosen by default; a link or button can pick another.
   let product = 'bundle';
-  let prices = { foxdusk: 0, hookdusk: 0, bundle: 0, upgrade_hookdusk: 0, upgrade_foxdusk: 0 };
+  let prices = { foxdusk: 0, hookdusk: 0, bundle: 0, upgrade_hookdusk: 0, upgrade_foxdusk: 0, foxstudio: 0 };
   let salesOpen = false;
 
   const money = (n) => `RM ${Number(n).toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -27,7 +27,7 @@
   loadSettings()
     .then((c) => {
       config = c;
-      prices = { foxdusk: Number(c.price_rm) || 0, hookdusk: 0, bundle: 0, ...Object.fromEntries(Object.entries(c.prices || {}).map(([k, v]) => [k, Number(v) || 0])) };
+      prices = { foxdusk: Number(c.price_rm) || 0, hookdusk: 0, bundle: 0, foxstudio: 0, ...Object.fromEntries(Object.entries(c.prices || {}).map(([k, v]) => [k, Number(v) || 0])) };
       // Upgrade = bundle minus the app already owned (the server works it out the same way).
       for (const [up, owned] of [['upgrade_hookdusk', 'foxdusk'], ['upgrade_foxdusk', 'hookdusk']]) {
         if (!(up in prices)) prices[up] = prices.bundle > prices[owned] && prices[owned] > 0 ? prices.bundle - prices[owned] : 0;
@@ -105,7 +105,7 @@
   }));
 
   // ---------- what to buy: Foxdusk AIOS, Hookdusk AIOS or both ----------
-  const NEW = ['bundle', 'foxdusk', 'hookdusk'];
+  const NEW = ['bundle', 'foxdusk', 'hookdusk', 'foxstudio'];
   const UPGRADES = ['upgrade_hookdusk', 'upgrade_foxdusk'];
   let newChoices = 3;
   let canUpgrade = false;
@@ -136,6 +136,7 @@
       upsell.hidden = false;
     } else upsell.hidden = true;
     setText('[data-price]', open ? money(price) : 'Coming soon');
+    $('#formLede').textContent = ledeFor(method);
     const button = $('#submit');
     if (!button.dataset.busy) {
       button.disabled = !open;
@@ -157,6 +158,13 @@
     card: { title: '2. Your details', lede: 'We send your licence key and download link to this email as soon as the payment goes through.', button: 'Continue to secure payment' },
     bank: { title: '2. Send your receipt', lede: 'We email your download link and licence key once the payment is confirmed, usually within one working day.', button: 'Send order' },
   };
+  // Fox Studio has no download link: the key comes by email and the team sends the installer.
+  function ledeFor(m) {
+    if (product !== 'foxstudio') return TEXT[m].lede;
+    return m === 'card'
+      ? 'We send your licence key to this email as soon as the payment goes through. Our team then contacts you to send the Fox Studio installer for Mac or Windows.'
+      : 'We email your licence key once the payment is confirmed, usually within one working day. Our team then contacts you to send the Fox Studio installer for Mac or Windows.';
+  }
   function setMethod(next) {
     method = next;
     document.querySelectorAll('[data-method]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.method === next)));
@@ -164,7 +172,7 @@
     $('[data-bank-info]').hidden = next === 'card';
     $('#receiptField').hidden = next === 'card';
     $('#formTitle').textContent = TEXT[next].title;
-    $('#formLede').textContent = TEXT[next].lede;
+    $('#formLede').textContent = ledeFor(next);
     if (!$('#submit').disabled) $('#submit').textContent = TEXT[next].button;
     hideError();
   }

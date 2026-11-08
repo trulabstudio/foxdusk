@@ -15,9 +15,9 @@ const ago = (iso) => {
   const d = Math.round(h / 24); return d < 30 ? `${d} d ago` : new Date(iso).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' });
 };
 const STATUS = { pending: 'To review', approved: 'Paid', rejected: 'Rejected', awaiting_payment: 'Awaiting card payment', expired: 'Card payment not completed' };
-const PRODUCT = { foxdusk: 'Foxdusk AIOS', hookdusk: 'Hookdusk AIOS', bundle: 'Bundle: Foxdusk + Hookdusk', upgrade_hookdusk: 'Upgrade: add Hookdusk to a key', upgrade_foxdusk: 'Upgrade: add Foxdusk to a key' };
-const PRODUCT_SHORT = { foxdusk: 'Foxdusk', hookdusk: 'Hookdusk', bundle: 'Bundle', upgrade_hookdusk: '+ Hookdusk', upgrade_foxdusk: '+ Foxdusk' };
-const APP = { foxdusk: 'Foxdusk AIOS', hookdusk: 'Hookdusk AIOS' };
+const PRODUCT = { foxdusk: 'Foxdusk AIOS', hookdusk: 'Hookdusk AIOS', bundle: 'Bundle: Foxdusk + Hookdusk', upgrade_hookdusk: 'Upgrade: add Hookdusk to a key', upgrade_foxdusk: 'Upgrade: add Foxdusk to a key', foxstudio: 'Fox Studio' };
+const PRODUCT_SHORT = { foxdusk: 'Foxdusk', hookdusk: 'Hookdusk', bundle: 'Bundle', upgrade_hookdusk: '+ Hookdusk', upgrade_foxdusk: '+ Foxdusk', foxstudio: 'Fox Studio' };
+const APP = { foxdusk: 'Foxdusk AIOS', hookdusk: 'Hookdusk AIOS', foxstudio: 'Fox Studio' };
 const productOf = (o) => (PRODUCT[o?.product] ? o.product : 'foxdusk');
 const METHOD = { bank_transfer: 'Bank transfer', stripe: 'Card / FPX (Stripe)' };
 const isTest = (o) => /^cs_test_/.test(String(o?.stripe_session_id || ''));
@@ -382,7 +382,7 @@ async function renderSettings() {
         <section class="card">
           <div class="card-head"><h2>Sales</h2></div>
           <label class="switch"><span><b>Accept new orders</b><span>When off, the buy form shows "Sales open soon".</span></span><input type="checkbox" id="sOpen" ${s.sales_open ? 'checked' : ''}></label>
-          ${[['sPrice', 'Foxdusk AIOS', s.price_rm], ['sPriceHook', 'Hookdusk AIOS', s.price_hookdusk_rm], ['sPriceBundle', 'Bundle (Foxdusk + Hookdusk)', s.price_bundle_rm]].map(([id, label, v]) => `<div class="field"><label for="${id}">${label}</label><div class="input-prefix"><span>RM</span><input class="input" id="${id}" type="number" inputmode="decimal" min="0" max="100000" step="1" value="${esc(v ?? 0)}"></div></div>`).join('')}
+          ${[['sPrice', 'Foxdusk AIOS', s.price_rm], ['sPriceHook', 'Hookdusk AIOS', s.price_hookdusk_rm], ['sPriceBundle', 'Bundle (Foxdusk + Hookdusk)', s.price_bundle_rm], ['sPriceFoxStudio', 'Fox Studio (desktop app)', s.price_foxstudio_rm]].map(([id, label, v]) => `<div class="field"><label for="${id}">${label}</label><div class="input-prefix"><span>RM</span><input class="input" id="${id}" type="number" inputmode="decimal" min="0" max="100000" step="1" value="${esc(v ?? 0)}"></div></div>`).join('')}
           <span class="hint">One licence for 2 computers. RM 0 hides that product from the buy form. Orders already placed keep their price.</span>
           <p class="buyer-sees" id="buyerSees"></p>
         </section>
@@ -435,7 +435,7 @@ async function renderSettings() {
   };
   const refresh = () => {
     const open = $('#sOpen').checked;
-    const list = [['Foxdusk', '#sPrice'], ['Hookdusk', '#sPriceHook'], ['Bundle', '#sPriceBundle']].filter(([, id]) => Number($(id).value) > 0).map(([n, id]) => `${n} ${rm(Number($(id).value), 0)}`);
+    const list = [['Foxdusk', '#sPrice'], ['Hookdusk', '#sPriceHook'], ['Bundle', '#sPriceBundle'], ['Fox Studio', '#sPriceFoxStudio']].filter(([, id]) => Number($(id).value) > 0).map(([n, id]) => `${n} ${rm(Number($(id).value), 0)}`);
     $('#buyerSees').innerHTML = `Buyers see <b>${open && list.length ? esc(list.join(' · ')) : 'Sales open soon'}</b>${$('#sStripe').checked ? ' · card / FPX on' : ''}`;
     let wa = $('#sWa').value.replace(/\D/g, ''); if (wa.startsWith('0')) wa = `60${wa.slice(1)}`;
     $('#waTry').href = wa ? `https://wa.me/${wa}?text=${encodeURIComponent($('#sWaMsg').value)}` : '#';
@@ -463,12 +463,12 @@ async function renderSettings() {
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const price = Number($('#sPrice').value); const priceHook = Number($('#sPriceHook').value); const priceBundle = Number($('#sPriceBundle').value);
-    const changed = [['Foxdusk AIOS', state.settings.price_rm, price], ['Hookdusk AIOS', state.settings.price_hookdusk_rm, priceHook], ['Bundle', state.settings.price_bundle_rm, priceBundle]].filter(([, a, b]) => Number(a) !== b);
+    const price = Number($('#sPrice').value); const priceHook = Number($('#sPriceHook').value); const priceBundle = Number($('#sPriceBundle').value); const priceFoxStudio = Number($('#sPriceFoxStudio').value);
+    const changed = [['Foxdusk AIOS', state.settings.price_rm, price], ['Hookdusk AIOS', state.settings.price_hookdusk_rm, priceHook], ['Bundle', state.settings.price_bundle_rm, priceBundle], ['Fox Studio', state.settings.price_foxstudio_rm, priceFoxStudio]].filter(([, a, b]) => Number(a) !== b);
     if (changed.length && !(await ask('Change the prices?', `${changed.map(([n, , b]) => `${n}: ${rm(b)}`).join(', ')}. foxdusk.com shows the new prices within a minute. Orders already placed keep their price.`, 'Change price'))) return;
     const btn = $('#sSave'); btn.disabled = true;
     try {
-      const r = await api(null, { action: 'save_settings', sales_open: $('#sOpen').checked, stripe_enabled: $('#sStripe').checked, price_rm: price, price_hookdusk_rm: priceHook, price_bundle_rm: priceBundle, bank_name: $('#sBank').value, account_name: $('#sName').value, account_no: $('#sNo').value, duitnow_qr: $('#sQr').value, whatsapp: $('#sWa').value, contact_email: $('#sMail').value, whatsapp_message: $('#sWaMsg').value });
+      const r = await api(null, { action: 'save_settings', sales_open: $('#sOpen').checked, stripe_enabled: $('#sStripe').checked, price_rm: price, price_hookdusk_rm: priceHook, price_bundle_rm: priceBundle, price_foxstudio_rm: priceFoxStudio, bank_name: $('#sBank').value, account_name: $('#sName').value, account_no: $('#sNo').value, duitnow_qr: $('#sQr').value, whatsapp: $('#sWa').value, contact_email: $('#sMail').value, whatsapp_message: $('#sWaMsg').value });
       state.settings = r.settings;
       toast('Saved. foxdusk.com shows these details within a minute.');
       await renderSettings();

@@ -118,6 +118,7 @@ async function saveSettings(body, admin) {
   const price = money(body.price_rm, 'Foxdusk AIOS');
   const priceHook = money(body.price_hookdusk_rm ?? 0, 'Hookdusk AIOS');
   const priceBundle = money(body.price_bundle_rm ?? 0, 'bundle');
+  const priceFoxStudio = money(body.price_foxstudio_rm ?? 0, 'Fox Studio');
   const row = {
     id: 1,
     sales_open: body.sales_open === true,
@@ -125,6 +126,7 @@ async function saveSettings(body, admin) {
     price_rm: price,
     price_hookdusk_rm: priceHook,
     price_bundle_rm: priceBundle,
+    price_foxstudio_rm: priceFoxStudio,
     bank_name: text(body.bank_name, 80),
     account_name: text(body.account_name, 120),
     account_no: text(body.account_no, 40),
@@ -135,7 +137,7 @@ async function saveSettings(body, admin) {
     updated_at: new Date().toISOString(),
     updated_by: admin,
   };
-  if (row.sales_open && !(price > 0 || priceHook > 0 || priceBundle > 0)) throw S.httpError(400, 'Set at least one price above RM 0 before opening sales.');
+  if (row.sales_open && !(price > 0 || priceHook > 0 || priceBundle > 0 || priceFoxStudio > 0)) throw S.httpError(400, 'Set at least one price above RM 0 before opening sales.');
   if (row.sales_open && (!row.bank_name || !row.account_name || !row.account_no)) throw S.httpError(400, 'Fill in the bank name, account name and account number before opening sales.');
   if (row.contact_email && !S.EMAIL_RE.test(row.contact_email)) throw S.httpError(400, 'Enter a valid contact email, or leave it empty.');
   if (row.stripe_enabled && !Stripe.ready()) throw S.httpError(400, 'Add STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET in Vercel first, then switch on card payment.');
@@ -247,7 +249,7 @@ module.exports = S.handler(async (req, res) => {
       const email = String(body.email || '').trim().toLowerCase().slice(0, 254);
       if (name.length < 2 || !S.EMAIL_RE.test(email)) throw S.httpError(400, 'Enter a name and a valid email.');
       const product = S.pickProduct(body.product);
-      if (S.PRODUCTS[product].upgradeFrom) throw S.httpError(400, 'Choose Foxdusk AIOS, Hookdusk AIOS or the bundle.');
+      if (S.PRODUCTS[product].upgradeFrom) throw S.httpError(400, 'Choose Foxdusk AIOS, Hookdusk AIOS, the bundle or Fox Studio.');
       const [o] = await S.db('orders', {
         method: 'POST', prefer: 'return=representation',
         body: { order_no: S.newOrderNo(), name, email, phone: null, product, amount_rm: 0, status: 'approved', decided_at: now, decided_by: admin, note: 'Free licence issued by admin' },
