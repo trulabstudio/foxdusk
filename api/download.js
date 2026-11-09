@@ -28,7 +28,7 @@ module.exports = async (req, res) => {
     const [lic] = await S.db(`licenses?download_token=eq.${encodeURIComponent(token)}&select=status,products`);
     if (!lic) return page(res, 404, 'This download link is not valid', 'Check that you used the link from your licence email. If it still does not work, email us your order number.');
     if (lic.status !== 'active') return page(res, 403, 'This licence has been cancelled', 'The download is no longer available for this licence. Email us if you think this is a mistake.');
-    if (S.appsOf(lic).length === 1 && S.appsOf(lic)[0] === 'foxstudio') return page(res, 404, 'Fox Studio is sent by our team', 'Your Fox Studio installer for Mac or Windows comes from our team, not from this link. Reply to your licence email if you have not received it.');
+    if (S.appsOf(lic).length === 1 && S.appsOf(lic)[0] === 'foxstudio') return page(res, 404, 'Fox Studio is sent by our team', 'Your Fox Studio installer for Mac (Apple chip or Intel) comes from our team, not from this link. Reply to your licence email if you have not received it.');
     if (!S.appsOf(lic).includes(app)) return page(res, 403, `This licence does not include ${S.APPS[app].name}`, `Your key is for ${S.appsOf(lic).map((a) => S.APPS[a].name).join(' and ')}. Email us if you think this is a mistake.`);
     const url = await S.signedDownloadUrl(app);
     res.statusCode = 302;

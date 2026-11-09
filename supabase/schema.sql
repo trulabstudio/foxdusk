@@ -151,7 +151,7 @@ alter table public.orders add constraint orders_upgrade_check
 create index if not exists orders_upgrade_key on public.orders (upgrade_key) where upgrade_key is not null;
 
 -- Fox Studio, a third product: a desktop app sold on its own (RM 1,999 by default).
--- The key arrives by email once paid; the team sends the Mac or Windows installer.
+-- The key arrives by email once paid; the team sends the Mac installer (Apple chip or Intel).
 -- Its licences hold products = '{foxstudio}'. Safe to run again.
 alter table public.settings add column if not exists price_foxstudio_rm numeric(10, 2) not null default 1999 check (price_foxstudio_rm >= 0 and price_foxstudio_rm <= 100000);
 alter table public.licenses drop constraint if exists licenses_products_check;

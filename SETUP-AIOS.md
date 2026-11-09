@@ -200,7 +200,7 @@ Tukar bila-bila masa di **/admin → Settings → Sales** (RM 0 = sorok produk t
 
 ## Fox Studio (produk ketiga)
 
-Fox Studio ialah app desktop (Mac dan Windows), dijual sendiri. Harga lalai **RM1,999**.
+Fox Studio ialah app desktop untuk Mac (Apple chip dan Intel; belum ada versi Windows), dijual sendiri. Harga lalai **RM1,999**.
 Tukar di **/admin → Settings → Sales** (RM 0 = sorok dari borang).
 
 - Pesanan `product: "foxstudio"`, lesen `products: ['foxstudio']`. App Fox Studio hantar
@@ -208,7 +208,7 @@ Tukar di **/admin → Settings → Sales** (RM 0 = sorok dari borang).
   dan kunci Fox Studio tak boleh buka Foxdusk/Hookdusk.
 - **Tiada link muat turun.** Bila bayaran disahkan (Stripe: automatik; bank transfer: bila kau
   klik Confirm), pembeli terima email dengan kunci dan mesej bahawa team akan hubungi untuk
-  hantar installer. Email notifikasi admin ingatkan kau untuk hantar installer Mac atau Windows.
+  hantar installer. Email notifikasi admin ingatkan kau untuk hantar installer Mac (`Fox Studio Mac.dmg` untuk Apple chip, `Fox Studio Intel.dmg` untuk Intel).
 - Tiada bundle atau naik taraf dengan Foxdusk/Hookdusk.
 - Installer dibina dalam `FOXDUSK AIOS/Fox-Studio/app/desktop` (`npm run dist:mac` di Mac,
   `npm run dist:win` di Windows) dan keluar di `Fox-Studio/app/dist-desktop/`.

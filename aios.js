@@ -162,8 +162,8 @@
   function ledeFor(m) {
     if (product !== 'foxstudio') return TEXT[m].lede;
     return m === 'card'
-      ? 'We send your licence key to this email as soon as the payment goes through. Our team then contacts you to send the Fox Studio installer for Mac or Windows.'
-      : 'We email your licence key once the payment is confirmed, usually within one working day. Our team then contacts you to send the Fox Studio installer for Mac or Windows.';
+      ? 'We send your licence key to this email as soon as the payment goes through. Our team then contacts you to send the Fox Studio installer for your Mac (Apple chip or Intel).'
+      : 'We email your licence key once the payment is confirmed, usually within one working day. Our team then contacts you to send the Fox Studio installer for your Mac (Apple chip or Intel).';
   }
   function setMethod(next) {
     method = next;
